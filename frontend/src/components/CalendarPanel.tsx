@@ -43,8 +43,8 @@ export default function CalendarPanel({ events, loading, onEventsUpdate }: Props
   const [localEvents, setLocalEvents] = useState<CalendarEvent[] | null>(null)
 
   const displayEvents = localEvents ?? events
-  const upcoming = displayEvents.filter(e => isUpcoming(e.date)).slice(0, 8)
-  const recent = displayEvents.filter(e => isPast(e.date) && e.actual).slice(-4).reverse()
+  const upcoming = displayEvents.filter(e => isUpcoming(e.date)).slice(0, 6)
+  const recent = displayEvents.filter(e => isPast(e.date) && e.actual).reverse().slice(0, 10)
 
   const hasAnalysis = displayEvents.some(e => e.stock_impact)
 
@@ -83,7 +83,7 @@ export default function CalendarPanel({ events, loading, onEventsUpdate }: Props
           {/* Recent with actual data */}
           {recent.length > 0 && (
             <div>
-              <p className="text-[10px] text-muted-more uppercase mb-1.5">已公布</p>
+              <p className="text-[10px] text-muted-more uppercase mb-1.5">已公布 ({recent.length})</p>
               {recent.map((e, i) => (
                 <EventRow key={`r-${i}`} event={e} variant="past" />
               ))}
@@ -130,7 +130,7 @@ function EventRow({ event: e, variant }: { event: CalendarEvent; variant: 'past'
           {e.forecast && <span className="text-[10px] text-muted-more">预期: <span className="text-muted">{e.forecast}</span></span>}
           {e.previous && <span className="text-[10px] text-muted-more">前值: <span className="text-muted">{e.previous}</span></span>}
           {variant === 'past' && e.actual && (
-            <span className="text-[10px] text-muted-more">实际: <span className="font-semibold text-blue-500">{e.actual}</span></span>
+            <span className="text-[10px] text-muted-more">实际: <span className="font-semibold text-blue-500">{e.actual}</span></span>}
           )}
         </div>
         {hasAi && e.explanation && (

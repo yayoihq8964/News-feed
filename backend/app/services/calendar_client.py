@@ -74,15 +74,16 @@ async def fetch_economic_calendar() -> list[dict]:
                 "actual": e.get("actual", ""),
             })
 
-        # Sort by date, filter to high/medium impact for major economies
+        # Filter: major economies only, keep High/Medium impact + any event with actual results
         major_currencies = {"USD", "EUR", "GBP", "JPY", "CNY", "AUD", "CAD", "CHF"}
         events = [
             e for e in events
-            if e["impact"] in ("High", "Medium") and e["country_code"] in major_currencies
+            if e["country_code"] in major_currencies
+            and (e["impact"] in ("High", "Medium") or e["actual"])
         ]
         events.sort(key=lambda x: x["date"])
 
-        logger.info(f"Fetched {len(events)} high/medium impact calendar events")
+        logger.info(f"Fetched {len(events)} calendar events (high/medium impact + published results)")
         _calendar_cache = events
         _cache_time = time.time()
         return events

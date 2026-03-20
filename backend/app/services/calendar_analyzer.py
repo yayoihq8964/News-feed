@@ -38,7 +38,8 @@ Rules:
 - ALL explanation and title_zh text MUST be in Chinese
 - stock_impact refers to broad US equity market impact
 - commodity_impact refers mainly to Gold, Silver, and other precious metals
-- Consider both direct and indirect market effects"""
+- Consider both direct and indirect market effects
+- For RELEASED events, compare actual vs forecast/previous to determine impact direction"""
 
 
 def _get_provider(provider_name: str, model: str, api_key: str, overrides: dict = {}) -> BaseLLMProvider:
@@ -114,16 +115,28 @@ async def analyze_calendar_events(events: list[dict]) -> list[dict]:
 
     provider = _get_provider(provider_name, model, api_key, overrides)
 
-    event_list = "\n".join(
-        f"- {e.get('title', '')} ({e.get('country', '')} {e.get('impact', '')} impact, {e.get('date', '')})"
-        for e in events
-    )
-    user_prompt = f"Analyze these economic calendar events:\n\n{event_list}"
+    lines = []
+    for e in events:
+        line = f"- {e.get('title', '')} ({e.get('country', '')} {e.get('impact', '')} impact, {e.get('date', '')})"
+        if e.get('actual'):
+            line += f" [RELEASED: actual={e['actual']}, forecast={e.get('forecast','N/A')}, previous={e.get('previous','N/A')}]"
+        elif e.get('forecast'):
+            line += f" [UPCOMING: forecast={e['forecast']}, previous={e.get('previous','N/A')}]"
+        lines.append(line)
+    event_list = "\n".join(lines)
+    user_prompt = f"Analyze these economic calendar events. For events marked [RELEASED], compare actual vs forecast/previous to determine market impact:\n\n{event_list}"
 
     raw_response = ""
     try:
         raw_response = await provider.analyze(user_prompt, CALENDAR_SYSTEM_PROMPT)
-        parsed = json.loads(raw_response)
+        # Strip <think> tags from reasoning models
+        import re
+        cleaned = re.sub(r'<think>.*?</think>', '', raw_response, flags=re.DOTALL).strip()
+        json_start = cleaned.find('{')
+        json_end = cleaned.rfind('}')
+        if json_start >= 0 and json_end > json_start:
+            cleaned = cleaned[json_start:json_end + 1]
+        parsed = json.loads(cleaned)
         analyzed = parsed.get("events", [])
     except json.JSONDecodeError as e:
         logger.error(f"Failed to parse calendar LLM JSON: {e}\nRaw: {raw_response[:500]}")
