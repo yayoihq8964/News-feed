@@ -130,7 +130,7 @@ function EventRow({ event: e, variant }: { event: CalendarEvent; variant: 'past'
           {e.forecast && <span className="text-[10px] text-muted-more">预期: <span className="text-muted">{e.forecast}</span></span>}
           {e.previous && <span className="text-[10px] text-muted-more">前值: <span className="text-muted">{e.previous}</span></span>}
           {variant === 'past' && e.actual && (
-            <span className="text-[10px] text-muted-more">实际: <span className="font-semibold text-blue-500">{e.actual}</span></span>}
+            <span className="text-[10px] text-muted-more">实际: <span className="font-semibold text-blue-500">{e.actual}</span></span>
           )}
         </div>
         {hasAi && e.explanation && (
