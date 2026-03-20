@@ -212,7 +212,27 @@ async def get_news_item_by_id(db: aiosqlite.Connection, news_id: int) -> Optiona
     return row_to_dict(row) if row else None
 
 
+MAX_ANALYZABLE = 50  # Only analyze the 50 most recent news items
+
+async def skip_old_news(db: aiosqlite.Connection) -> int:
+    """Mark news outside the top-50 window as 'skipped' to save LLM tokens."""
+    cursor = await db.execute(
+        """UPDATE news_items SET analysis_status = 'skipped'
+           WHERE analysis_status = 'pending'
+           AND id NOT IN (
+               SELECT id FROM news_items ORDER BY published_at DESC LIMIT ?
+           )""",
+        (MAX_ANALYZABLE,),
+    )
+    await db.commit()
+    return cursor.rowcount
+
 async def get_unanalyzed_news(db: aiosqlite.Connection, limit: int = 5) -> list[dict]:
+    # First skip any old news outside the analysis window
+    skipped = await skip_old_news(db)
+    if skipped:
+        logger.info(f"Skipped {skipped} old news items (outside top-{MAX_ANALYZABLE} window)")
+
     async with db.execute(
         "SELECT * FROM news_items WHERE analysis_status = 'pending' ORDER BY published_at DESC LIMIT ?",
         (limit,),
