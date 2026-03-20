@@ -6,28 +6,38 @@
 
 - **多源新闻聚合** — Finnhub / NewsAPI / GNews 三大免费新闻源
 - **LLM 智能分析** — 支持 OpenAI / Claude / Grok / Ollama，可自定义模型
+- **AI 中文翻译** — 新闻标题和摘要自动翻译为中文
 - **情绪评分** — -100 到 +100 精准量化，含置信度
-- **股票影响** — 自动识别受影响个股及影响逻辑
+- **股票影响** — 自动识别受影响个股及影响逻辑链
 - **贵金属追踪** — 黄金、白银、铂金、钯金影响分析
 - **X 情绪监控** — 通过 Grok API 监控散户情绪面和关注热点
-- **逻辑链推理** — 展示从新闻事件到市场影响的完整推理链
+- **宏观经济日历** — 全球主要经济体事件 + AI 利多利空分析
+- **市场时钟** — 美股交易所时间 + 本地时间 + 开盘状态
+- **重大新闻置顶** — 高影响力新闻自动置顶 4 小时
+- **暗蓝主题** — 深色/浅色双主题，暗蓝色调护眼设计
 
 ## 🚀 快速开始
 
-### 1. 配置环境变量
+### 一键部署（推荐）
+
+```bash
+git clone https://github.com/yayoihq8964/News-feed.git
+cd News-feed
+chmod +x setup.sh
+./setup.sh
+```
+
+脚本会引导你配置 API Keys，然后自动构建并启动 Docker 容器。
+
+### 手动配置
 
 ```bash
 cp .env.example .env
 # 编辑 .env 填入你的 API Keys
-```
-
-### 2. Docker 启动
-
-```bash
 docker-compose up -d
 ```
 
-### 3. 访问
+### 访问
 
 - 前端面板: http://localhost:3000
 - 后端 API: http://localhost:8000
@@ -83,20 +93,6 @@ cd frontend
 npm install
 npm run dev
 ```
-
-## 📋 环境变量说明
-
-| 变量 | 必填 | 说明 |
-|------|------|------|
-| `FINNHUB_API_KEY` | 推荐 | Finnhub 新闻源 |
-| `NEWSAPI_API_KEY` | 推荐 | NewsAPI 新闻源 |
-| `GNEWS_API_KEY` | 推荐 | GNews 新闻源 |
-| `DEFAULT_LLM_PROVIDER` | 是 | 默认 LLM: openai/anthropic/grok/ollama |
-| `DEFAULT_LLM_MODEL` | 是 | 默认模型名 |
-| `DEFAULT_LLM_API_KEY` | 是 | 默认 LLM 的 API Key |
-| `GROK_API_KEY` | X监控用 | xAI Grok Key，用于 X 情绪分析 |
-| `OLLAMA_BASE_URL` | Ollama用 | 默认 http://host.docker.internal:11434 |
-| `NEWS_POLL_INTERVAL` | 否 | 新闻拉取间隔秒数，默认 120 |
 
 ## 📝 License
 
