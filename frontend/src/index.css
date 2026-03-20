@@ -1,0 +1,113 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+.dark {
+  color-scheme: dark;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+/* ===== Semantic dark-blue theme tokens ===== */
+@layer components {
+  /* Panels / Cards */
+  .panel {
+    @apply bg-white border-zinc-200 text-zinc-900;
+  }
+  .dark .panel {
+    @apply bg-[#131a2e] border-[#1e2a45] text-zinc-100;
+  }
+  .panel-subtle {
+    @apply bg-zinc-50 border-zinc-100;
+  }
+  .dark .panel-subtle {
+    @apply bg-[#0f1628]/60 border-[#1e2a45]/50;
+  }
+
+  /* Page background */
+  .page-bg {
+    @apply bg-zinc-50 text-zinc-900;
+  }
+  .dark .page-bg {
+    @apply bg-[#0b1120] text-zinc-100;
+  }
+
+  /* Header */
+  .header-bg {
+    @apply bg-white/80 border-zinc-200;
+  }
+  .dark .header-bg {
+    @apply bg-[#0b1120]/85 border-[#1e2a45];
+  }
+
+  /* Inputs */
+  .input-surface {
+    @apply bg-zinc-50 border-zinc-200 text-zinc-800;
+  }
+  .dark .input-surface {
+    @apply bg-[#131a2e] border-[#1e2a45] text-zinc-200;
+  }
+
+  /* Muted text */
+  .text-muted {
+    @apply text-zinc-500;
+  }
+  .dark .text-muted {
+    @apply text-zinc-400;
+  }
+  .text-muted-more {
+    @apply text-zinc-400;
+  }
+  .dark .text-muted-more {
+    @apply text-zinc-500;
+  }
+
+  /* Pills / badges */
+  .pill-bg {
+    @apply bg-zinc-100;
+  }
+  .dark .pill-bg {
+    @apply bg-[#1a2340]/70;
+  }
+
+  /* Timeline border */
+  .timeline-border {
+    @apply border-zinc-100;
+  }
+  .dark .timeline-border {
+    @apply border-[#1e2a45]/60;
+  }
+
+  /* Hover */
+  .hover-surface {
+    @apply hover:bg-zinc-100;
+  }
+  .dark .hover-surface {
+    @apply hover:bg-[#1a2340];
+  }
+}
+
+/* Custom scrollbar */
+.scrollbar-thin::-webkit-scrollbar { width: 4px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+.scrollbar-thin::-webkit-scrollbar-thumb { border-radius: 2px; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: #e4e4e7; }
+.dark .scrollbar-thin::-webkit-scrollbar-thumb { background: #1e2a45; }
+
+/* Range slider dark mode */
+input[type="range"] {
+  @apply accent-blue-500;
+}
+
+/* Select dropdown dark override */
+.dark select option {
+  background: #131a2e;
+  color: #e4e4e7;
+}

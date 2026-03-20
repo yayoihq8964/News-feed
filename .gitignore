@@ -1,0 +1,14 @@
+*.pyc
+__pycache__/
+.env
+*.db
+node_modules/
+dist/
+.vite/
+.DS_Store
+backend/data/*.db
+backend/.env
+CLAUDE_*.md
+/tmp/
+*.jpg
+package-lock.json

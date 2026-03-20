@@ -1,0 +1,168 @@
+import logging
+from typing import Any, Optional
+
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+
+from app.config import settings as app_settings
+from app.models.database import get_db, get_all_settings, set_setting, get_setting
+from app.services.llm_providers import OpenAIProvider, AnthropicProvider, GrokProvider, OllamaProvider
+
+logger = logging.getLogger(__name__)
+router = APIRouter(prefix="/api/settings", tags=["settings"])
+
+REDACT_KEYS = {
+    "default_llm_api_key",
+    "openai_api_key",
+    "anthropic_api_key",
+    "grok_api_key",
+    "finnhub_api_key",
+    "newsapi_api_key",
+    "gnews_api_key",
+}
+
+PROVIDER_MODELS = {
+    "openai": ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"],
+    "anthropic": ["claude-opus-4-6", "claude-sonnet-4-6", "claude-haiku-4-5-20251001"],
+    "grok": ["grok-beta", "grok-2"],
+    "ollama": ["llama3", "mistral", "codellama", "phi3"],
+}
+
+
+def _redact(key: str, value: Any) -> Any:
+    if key in REDACT_KEYS and isinstance(value, str) and len(value) > 4:
+        return "****" + value[-4:]
+    return value
+
+
+def _merge_settings(db_overrides: dict) -> dict:
+    """Merge env settings with DB overrides, redacting sensitive values."""
+    env_vals = {
+        "default_llm_provider": app_settings.default_llm_provider,
+        "default_llm_model": app_settings.default_llm_model,
+        "default_llm_api_key": app_settings.default_llm_api_key,
+        "openai_api_key": app_settings.openai_api_key,
+        "anthropic_api_key": app_settings.anthropic_api_key,
+        "grok_api_key": app_settings.grok_api_key,
+        "ollama_base_url": app_settings.ollama_base_url,
+        "news_poll_interval": app_settings.news_poll_interval,
+        "analysis_batch_size": app_settings.analysis_batch_size,
+        "finnhub_api_key": app_settings.finnhub_api_key,
+        "newsapi_api_key": app_settings.newsapi_api_key,
+        "gnews_api_key": app_settings.gnews_api_key,
+    }
+    merged = {**env_vals, **db_overrides}
+    return {k: _redact(k, v) for k, v in merged.items()}
+
+
+class SettingsUpdateRequest(BaseModel):
+    default_llm_provider: Optional[str] = None
+    default_llm_model: Optional[str] = None
+    default_llm_api_key: Optional[str] = None
+    openai_api_key: Optional[str] = None
+    anthropic_api_key: Optional[str] = None
+    grok_api_key: Optional[str] = None
+    ollama_base_url: Optional[str] = None
+    news_poll_interval: Optional[int] = None
+    analysis_batch_size: Optional[int] = None
+    finnhub_api_key: Optional[str] = None
+    newsapi_api_key: Optional[str] = None
+    gnews_api_key: Optional[str] = None
+
+
+class TestLLMRequest(BaseModel):
+    provider: str
+    model: str
+    api_key: Optional[str] = None
+
+
+@router.get("")
+async def get_settings():
+    db = await get_db()
+    try:
+        db_overrides = await get_all_settings(db)
+        return _merge_settings(db_overrides)
+    finally:
+        await db.close()
+
+
+@router.put("")
+async def update_settings(body: SettingsUpdateRequest):
+    db = await get_db()
+    try:
+        updated = {}
+        for key, value in body.model_dump(exclude_none=True).items():
+            await set_setting(db, key, value)
+            updated[key] = _redact(key, value)
+        return {"updated": updated, "message": "Settings saved to database"}
+    finally:
+        await db.close()
+
+
+@router.get("/providers")
+async def list_providers():
+    db = await get_db()
+    try:
+        overrides = await get_all_settings(db)
+
+        def resolve_key(provider: str) -> str:
+            key_map = {
+                "openai": overrides.get("openai_api_key") or app_settings.openai_api_key,
+                "anthropic": overrides.get("anthropic_api_key") or app_settings.anthropic_api_key,
+                "grok": overrides.get("grok_api_key") or app_settings.grok_api_key,
+                "ollama": "",
+            }
+            return key_map.get(provider, "")
+
+        providers = []
+        for name, models in PROVIDER_MODELS.items():
+            api_key = resolve_key(name)
+            configured = bool(api_key) if name != "ollama" else True
+            providers.append({
+                "name": name,
+                "configured": configured,
+                "models": models,
+            })
+
+        return {"providers": providers}
+    finally:
+        await db.close()
+
+
+@router.post("/test-llm")
+async def test_llm_connection(body: TestLLMRequest):
+    db = await get_db()
+    try:
+        overrides = await get_all_settings(db)
+
+        api_key = body.api_key
+        if not api_key:
+            key_map = {
+                "openai": overrides.get("openai_api_key") or app_settings.openai_api_key,
+                "anthropic": overrides.get("anthropic_api_key") or app_settings.anthropic_api_key,
+                "grok": overrides.get("grok_api_key") or app_settings.grok_api_key,
+                "ollama": "",
+            }
+            api_key = key_map.get(body.provider, "")
+
+        if body.provider == "openai":
+            provider = OpenAIProvider(api_key=api_key, model=body.model)
+        elif body.provider == "anthropic":
+            provider = AnthropicProvider(api_key=api_key, model=body.model)
+        elif body.provider == "grok":
+            provider = GrokProvider(api_key=api_key, model=body.model)
+        elif body.provider == "ollama":
+            ollama_url = overrides.get("ollama_base_url") or app_settings.ollama_base_url
+            provider = OllamaProvider(base_url=ollama_url, model=body.model)
+        else:
+            raise HTTPException(status_code=400, detail=f"Unknown provider: {body.provider}")
+
+        available = await provider.is_available()
+        return {
+            "provider": body.provider,
+            "model": body.model,
+            "available": available,
+            "status": "ok" if available else "unavailable",
+        }
+    finally:
+        await db.close()
