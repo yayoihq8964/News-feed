@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 from datetime import datetime
 from typing import Optional
 
@@ -8,6 +9,14 @@ from app.models.database import get_db, insert_x_sentiment, get_setting
 from app.services.llm_providers.grok_provider import GrokProvider
 
 logger = logging.getLogger(__name__)
+
+# Track last error for API visibility
+_last_error: Optional[str] = None
+
+
+def get_last_error() -> Optional[str]:
+    return _last_error
+
 
 X_SENTIMENT_PROMPT = """You are a social media financial sentiment analyst. Analyze current trending financial discussions on X/Twitter.
 
@@ -31,6 +40,7 @@ X_SYSTEM_PROMPT = "You are a financial social media analyst specializing in reta
 
 async def run_x_sentiment_analysis() -> Optional[dict]:
     """Run Grok-based X sentiment analysis and store results."""
+    global _last_error
     db = await get_db()
     try:
         # Get API key (check DB overrides first)
@@ -38,7 +48,8 @@ async def run_x_sentiment_analysis() -> Optional[dict]:
         if not grok_key:
             grok_key = app_settings.grok_api_key
         if not grok_key:
-            logger.warning("Grok API key not configured; skipping X sentiment analysis")
+            _last_error = "Grok API key not configured"
+            logger.warning(_last_error)
             return None
 
         grok_model = await get_setting(db, "grok_model") or "grok-4.20-beta"
@@ -48,7 +59,6 @@ async def run_x_sentiment_analysis() -> Optional[dict]:
         try:
             raw = await provider.analyze(X_SENTIMENT_PROMPT, X_SYSTEM_PROMPT)
             # Strip <think>...</think> tags from reasoning models
-            import re
             cleaned = re.sub(r'<think>.*?</think>', '', raw, flags=re.DOTALL).strip()
             # Find the JSON object in the response
             json_start = cleaned.find('{')
@@ -57,10 +67,19 @@ async def run_x_sentiment_analysis() -> Optional[dict]:
                 cleaned = cleaned[json_start:json_end + 1]
             parsed = json.loads(cleaned)
         except json.JSONDecodeError as e:
+            _last_error = f"JSON parse error: {e}"
             logger.error(f"Failed to parse Grok X sentiment JSON: {e}\nRaw: {raw[:500]}")
             return None
         except Exception as e:
-            logger.error(f"Grok X sentiment analysis failed: {e}")
+            # Extract upstream details if available
+            error_detail = str(e)
+            if hasattr(e, 'response'):
+                try:
+                    error_detail = f"HTTP {e.response.status_code}: {e.response.text[:200]}"
+                except Exception:
+                    pass
+            _last_error = f"Grok API error: {error_detail}"
+            logger.error(f"Grok X sentiment analysis failed: {error_detail}")
             return None
 
         trending = parsed.get("trending_tickers", [])
@@ -78,6 +97,7 @@ async def run_x_sentiment_analysis() -> Optional[dict]:
         }
 
         sentiment_id = await insert_x_sentiment(db, sentiment_record)
+        _last_error = None  # Clear error on success
         logger.info(f"X sentiment analysis stored with id={sentiment_id}")
 
         return {

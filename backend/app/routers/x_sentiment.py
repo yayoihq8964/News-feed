@@ -3,7 +3,7 @@ import logging
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 
 from app.models.database import get_db, get_latest_x_sentiment, get_x_sentiment_history
-from app.services.grok_x_monitor import run_x_sentiment_analysis
+from app.services.grok_x_monitor import run_x_sentiment_analysis, get_last_error
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/x-sentiment", tags=["x-sentiment"])
@@ -15,7 +15,11 @@ async def get_latest_sentiment():
     try:
         sentiment = await get_latest_x_sentiment(db)
         if not sentiment:
-            return {"message": "No X sentiment data yet. Trigger a refresh to get started.", "data": None}
+            last_error = get_last_error()
+            msg = "No X sentiment data yet. Trigger a refresh to get started."
+            if last_error:
+                msg = f"Last analysis failed: {last_error}"
+            return {"message": msg, "data": None, "last_error": last_error}
         return {"data": sentiment}
     finally:
         await db.close()
