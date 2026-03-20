@@ -57,7 +57,7 @@ export default function SettingsModal({ onClose }: Props) {
                 <select
                   value={(settings as Record<string, string>).default_llm_provider ?? 'openai'}
                   onChange={e => update('default_llm_provider', e.target.value)}
-                  className="w-full text-sm rounded-lg border input-surface px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500/30 appearance-none">
+                  className="w-full text-sm rounded-xl border input-surface px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500/30 appearance-none">
                   {providers.map(p => (
                     <option key={p.name} value={p.name}>{p.name}{p.configured ? ' ✓' : ''}</option>
                   ))}
@@ -68,7 +68,7 @@ export default function SettingsModal({ onClose }: Props) {
                   value={(settings as Record<string, string>).default_llm_model ?? ''}
                   onChange={e => update('default_llm_model', e.target.value)}
                   placeholder="gpt-4o"
-                  className="w-full text-sm rounded-lg border input-surface px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500/30" />
+                  className="w-full text-sm rounded-xl border input-surface px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500/30" />
               </Field>
             </div>
           </section>
@@ -79,22 +79,22 @@ export default function SettingsModal({ onClose }: Props) {
               <input type="range" min="30" max="600" step="30"
                 value={(settings as Record<string, number>).news_poll_interval ?? 60}
                 onChange={e => update('news_poll_interval', parseInt(e.target.value))}
-                className="w-full accent-blue-500" />
+                className="w-full accent-indigo-500" />
             </Field>
           </section>
 
           <div className="flex items-center gap-3 pt-3 border-t timeline-border">
             <button onClick={handleSave} disabled={saving}
-              className="flex-1 text-sm font-medium py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 transition-colors">
+              className="flex-1 text-sm font-medium py-2 rounded-xl bg-indigo-500 text-white hover:bg-indigo-600 disabled:opacity-50 transition-all shadow-sm hover:shadow">
               {saving ? '保存中...' : '保存设置'}
             </button>
             <button onClick={handleTest} disabled={testing}
-              className="text-sm font-medium px-4 py-2 rounded-lg border panel text-muted hover-surface disabled:opacity-50 transition-colors">
+              className="text-sm font-medium px-4 py-2 rounded-xl border panel text-muted hover-surface disabled:opacity-50 transition-all shadow-sm">
               {testing ? '测试中...' : '测试连接'}
             </button>
           </div>
           {testResult && (
-            <p className={`text-xs text-center ${testResult.includes('成功') || testResult.includes('✓') ? 'text-emerald-500' : 'text-red-500'}`}>
+            <p className={`text-xs text-center ${testResult.includes('成功') || testResult.includes('✓') ? 'text-teal-500' : 'text-rose-500'}`}>
               {testResult}
             </p>
           )}

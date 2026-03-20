@@ -23,7 +23,7 @@ export default function TopStocks({ analyses }: Props) {
   const maxAbs = Math.max(...top.map(s => Math.abs(s.avg)), 1)
 
   return (
-    <div className="rounded-xl border panel p-4">
+    <div className="rounded-2xl border panel p-4">
       <h3 className="text-xs font-semibold text-muted-more uppercase tracking-wide mb-3">热门影响股票</h3>
       <div className="space-y-2">
         {top.map(s => (
@@ -32,15 +32,15 @@ export default function TopStocks({ analyses }: Props) {
             <div className="flex-1 flex items-center h-4">
               {s.avg >= 0 ? (
                 <><div className="w-1/2" /><div className="w-1/2 flex items-center">
-                  <div className="h-1.5 rounded-r bg-emerald-500 transition-all" style={{ width: `${(s.avg / maxAbs) * 100}%` }} />
+                  <div className="h-1.5 rounded-r-full bg-teal-500 transition-all" style={{ width: `${(s.avg / maxAbs) * 100}%` }} />
                 </div></>
               ) : (
                 <><div className="w-1/2 flex items-center justify-end">
-                  <div className="h-1.5 rounded-l bg-red-500 transition-all" style={{ width: `${(Math.abs(s.avg) / maxAbs) * 100}%` }} />
+                  <div className="h-1.5 rounded-l-full bg-rose-500 transition-all" style={{ width: `${(Math.abs(s.avg) / maxAbs) * 100}%` }} />
                 </div><div className="w-1/2" /></>
               )}
             </div>
-            <span className={`font-mono text-[10px] font-semibold w-8 text-right ${s.avg >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+            <span className={`font-mono text-[10px] font-semibold w-8 text-right ${s.avg >= 0 ? 'text-teal-500' : 'text-rose-500'}`}>
               {s.avg > 0 ? '+' : ''}{s.avg}
             </span>
           </div>

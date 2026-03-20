@@ -15,7 +15,7 @@ import SettingsModal from './components/SettingsModal'
 
 export default function App() {
   const [showSettings, setShowSettings] = useState(false)
-  const [filter, setFilter] = useState<'all' | 'bullish' | 'bearish' | 'pending'>('all')
+  const [filter, setFilter] = useState<'all' | 'bullish' | 'bearish'>('all')
 
   const newsApi = useApi(() => getNews({ page_size: 25 }), [])
   const statsApi = useApi(getAnalysisStats, [])

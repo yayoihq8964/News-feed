@@ -26,9 +26,9 @@ function isPast(dateStr: string): boolean {
 function ImpactBadge({ impact, label }: { impact?: string; label: string }) {
   if (!impact) return null
   const map: Record<string, { emoji: string; text: string; cls: string }> = {
-    bullish: { emoji: '🟢', text: '利多', cls: 'text-emerald-500' },
-    bearish: { emoji: '🔴', text: '利空', cls: 'text-red-500' },
-    neutral: { emoji: '⚪', text: '中性', cls: 'text-zinc-400' },
+    bullish: { emoji: '🟢', text: '利多', cls: 'text-teal-500' },
+    bearish: { emoji: '🔴', text: '利空', cls: 'text-rose-500' },
+    neutral: { emoji: '⚪', text: '中性', cls: 'text-slate-400' },
   }
   const style = map[impact] ?? map.neutral
   return (
@@ -62,13 +62,13 @@ export default function CalendarPanel({ events, loading, onEventsUpdate }: Props
   }
 
   return (
-    <div className="rounded-xl border panel p-4">
+    <div className="rounded-2xl border panel p-4">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-xs font-semibold text-muted-more uppercase tracking-wide">📅 宏观经济日历</h3>
         <button
           onClick={handleAnalyze}
           disabled={analyzing}
-          className="text-[10px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 disabled:opacity-50 transition-colors"
+          className="text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/20 disabled:opacity-50 transition-all shadow-sm"
         >
           {analyzing ? '分析中...' : hasAnalysis ? '重新分析' : 'AI分析'}
         </button>
@@ -83,7 +83,7 @@ export default function CalendarPanel({ events, loading, onEventsUpdate }: Props
           {/* Recent with actual data */}
           {recent.length > 0 && (
             <div>
-              <p className="text-[10px] text-muted-more uppercase mb-1.5">已公布 ({recent.length})</p>
+              <p className="text-[10px] text-muted-more uppercase mb-1.5">已公布</p>
               {recent.map((e, i) => (
                 <EventRow key={`r-${i}`} event={e} variant="past" />
               ))}
@@ -130,7 +130,7 @@ function EventRow({ event: e, variant }: { event: CalendarEvent; variant: 'past'
           {e.forecast && <span className="text-[10px] text-muted-more">预期: <span className="text-muted">{e.forecast}</span></span>}
           {e.previous && <span className="text-[10px] text-muted-more">前值: <span className="text-muted">{e.previous}</span></span>}
           {variant === 'past' && e.actual && (
-            <span className="text-[10px] text-muted-more">实际: <span className="font-semibold text-blue-500">{e.actual}</span></span>
+            <span className="text-[10px] text-muted-more">实际: <span className="font-semibold text-indigo-500">{e.actual}</span></span>
           )}
         </div>
         {hasAi && e.explanation && (

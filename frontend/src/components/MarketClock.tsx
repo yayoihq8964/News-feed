@@ -20,12 +20,12 @@ function getETComponents(now: Date) {
 }
 
 function getMarketStatus(etHour: number, etMin: number, dayOfWeek: number): { label: string; color: string } {
-  if (dayOfWeek === 0 || dayOfWeek === 6) return { label: '休市', color: 'text-zinc-400' }
+  if (dayOfWeek === 0 || dayOfWeek === 6) return { label: '休市', color: 'text-slate-400' }
   const t = etHour * 60 + etMin
-  if (t >= 570 && t < 960) return { label: '常规交易时段', color: 'text-emerald-500' }   // 9:30-16:00
-  if (t >= 240 && t < 570) return { label: '盘前', color: 'text-amber-500' }             // 4:00-9:30
-  if (t >= 960 && t < 1200) return { label: '盘后', color: 'text-amber-500' }            // 16:00-20:00
-  return { label: '休市', color: 'text-zinc-400' }
+  if (t >= 570 && t < 960) return { label: '常规交易时段', color: 'text-teal-500' }
+  if (t >= 240 && t < 570) return { label: '盘前', color: 'text-amber-500' }
+  if (t >= 960 && t < 1200) return { label: '盘后', color: 'text-amber-500' }
+  return { label: '休市', color: 'text-slate-400' }
 }
 
 function formatTime(d: Date): string {
@@ -47,14 +47,13 @@ export default function MarketClock() {
   const et = getETComponents(now)
   const status = getMarketStatus(et.hour, et.minute, et.dayOfWeek)
 
-  // Local time
   const localTime = formatTime(now)
   const localDate = formatDate(now)
 
   const isTrading = status.label === '常规交易时段'
 
   return (
-    <div className="rounded-xl border panel p-4">
+    <div className="rounded-2xl border panel p-4">
       <h3 className="text-xs font-semibold text-muted-more uppercase tracking-wide mb-3">市场时间</h3>
       <div className="space-y-3">
         {/* US Market */}
@@ -67,8 +66,8 @@ export default function MarketClock() {
             </div>
           </div>
           <div className="text-right">
-            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
-              isTrading ? 'bg-emerald-500/10 text-emerald-500' :
+            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
+              isTrading ? 'bg-teal-500/10 text-teal-500' :
               status.label === '休市' ? 'pill-bg text-muted' :
               'bg-amber-500/10 text-amber-500'
             }`}>{status.label}</span>
