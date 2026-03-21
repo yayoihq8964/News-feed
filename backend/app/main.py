@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.config import settings as app_settings
 from app.models.database import init_db
 from app.utils.scheduler import start_scheduler, stop_scheduler
 from app.routers import news, analysis, x_sentiment, settings, calendar
@@ -46,17 +47,15 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS configuration
-_cors_origins = os.environ.get("CORS_ORIGINS", "").split(",")
-_cors_origins = [o.strip() for o in _cors_origins if o.strip()]
+# CORS configuration — reads from Settings (env/.env file)
+_cors_origins = [o.strip() for o in app_settings.cors_origins.split(",") if o.strip()]
 if not _cors_origins:
-    # Development fallback: allow all origins without credentials
-    _cors_origins = ["*"]
+    _cors_origins = ["*"]  # Development fallback
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors_origins,
-    allow_credentials=("*" not in _cors_origins),  # credentials not allowed with wildcard
+    allow_credentials=("*" not in _cors_origins),
     allow_methods=["*"],
     allow_headers=["*"],
 )

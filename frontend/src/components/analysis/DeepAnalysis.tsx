@@ -13,39 +13,37 @@ export default function DeepAnalysis() {
 
   const selectedNewsId = id ? parseInt(id) : null
 
-  // Direct fetch by news_id when available
+  // ── Detail mode: fetch by news_id directly ──
   const directApi = useApi<{ analysis: Analysis; news: NewsItem | null }>(
     () => selectedNewsId ? getAnalysisByNewsId(selectedNewsId) : Promise.reject('no id'),
     [selectedNewsId]
   )
 
-  // Fallback: load latest analyses for the listing view
+  // ── List mode (no id): load latest analyses ──
   const analysesApi = useApi<{ items: Analysis[]; total: number }>(
-    () => getAnalyses({ page: 1, page_size: 20 }),
-    []
+    () => selectedNewsId ? Promise.resolve({ items: [], total: 0 }) : getAnalyses({ page: 1, page_size: 20 }),
+    [selectedNewsId]
   )
-  const newsApi = useApi<{ items: NewsItem[]; total: number }>(() => getNews(), [])
+  const newsApi = useApi<{ items: NewsItem[]; total: number }>(
+    () => selectedNewsId ? Promise.resolve({ items: [], total: 0 }) : getNews(),
+    [selectedNewsId]
+  )
+
+  // Detail mode uses directApi only; list mode uses analysesApi
+  const selectedAnalysis = selectedNewsId
+    ? directApi.data?.analysis ?? null
+    : (analysesApi.data?.items ?? [])[0] ?? null
+
+  const matchedNews = selectedNewsId
+    ? directApi.data?.news ?? null
+    : selectedAnalysis
+    ? (newsApi.data?.items ?? []).find(n => n.id === selectedAnalysis.news_id) ?? null
+    : null
 
   const analyses = analysesApi.data?.items ?? []
   const newsItems = newsApi.data?.items ?? []
 
-  // Use direct API result first, then fallback to list search
-  const selectedAnalysis = selectedNewsId && directApi.data
-    ? directApi.data.analysis
-    : selectedNewsId
-    ? analyses.find(a => a.news_id === selectedNewsId)
-    : analyses[0]
-
-  // Find matching news item for image
-  const matchedNews = selectedNewsId && directApi.data?.news
-    ? directApi.data.news
-    : selectedAnalysis
-    ? newsItems.find(n => n.id === selectedAnalysis.news_id)
-    : null
-
-  const isLoading = selectedNewsId
-    ? (directApi.loading && analysesApi.loading)
-    : analysesApi.loading
+  const isLoading = selectedNewsId ? directApi.loading : analysesApi.loading
 
   const handleTrigger = async () => {
     setTriggerMsg('Analysis triggered...')
@@ -53,7 +51,8 @@ export default function DeepAnalysis() {
       await triggerAnalysis()
       setTriggerMsg('Analysis running in background. Refresh in a moment.')
       setTimeout(() => {
-        analysesApi.refetch()
+        if (selectedNewsId) directApi.refetch()
+        else analysesApi.refetch()
         setTriggerMsg(null)
       }, 5000)
     } catch {
@@ -61,11 +60,11 @@ export default function DeepAnalysis() {
     }
   }
 
-  if (isLoading && !analysesApi.data && !directApi.data) {
+  if (isLoading) {
     return <LoadingSpinner className="py-20" />
   }
 
-  // No analysis data yet
+  // No analysis found (directApi returned 404, or list is empty)
   if (!selectedAnalysis) {
     return (
       <div className="flex-1 p-6 md:p-8">

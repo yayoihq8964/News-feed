@@ -64,7 +64,7 @@ export default function SentimentDashboard() {
               Fear &amp; Greed Index
             </h1>
             <p className="text-white/60 text-lg max-w-2xl leading-relaxed mb-8">
-              Real-time sentiment aggregation across news, social media, and market data.
+              AI-powered sentiment aggregation across news sources and LLM-estimated social signals.
             </p>
             <FearGreedGauge value={fearGreed} />
           </div>
@@ -130,7 +130,7 @@ export default function SentimentDashboard() {
             </div>
           ) : (
             <p className="text-sm text-on-surface-variant dark:text-slate-500 italic">
-              Narratives will appear after X/Twitter sentiment analysis is run. Click refresh on the X Sentiment panel to get started.
+              Narratives will appear after social sentiment estimation is run. Trigger a refresh to generate LLM-based market narratives.
             </p>
           )}
         </section>

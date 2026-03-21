@@ -47,6 +47,7 @@ def _merge_settings(db_overrides: dict) -> dict:
         "ollama_base_url": app_settings.ollama_base_url,
         "news_poll_interval": app_settings.news_poll_interval,
         "analysis_batch_size": app_settings.analysis_batch_size,
+        "x_sentiment_interval": app_settings.x_sentiment_interval,
         "finnhub_api_key": app_settings.finnhub_api_key,
         "newsapi_api_key": app_settings.newsapi_api_key,
         "gnews_api_key": app_settings.gnews_api_key,
@@ -65,6 +66,7 @@ class SettingsUpdateRequest(BaseModel):
     ollama_base_url: Optional[str] = None
     news_poll_interval: Optional[int] = None
     analysis_batch_size: Optional[int] = None
+    x_sentiment_interval: Optional[int] = None
     finnhub_api_key: Optional[str] = None
     newsapi_api_key: Optional[str] = None
     gnews_api_key: Optional[str] = None
@@ -91,10 +93,28 @@ async def update_settings(body: SettingsUpdateRequest):
     db = await get_db()
     try:
         updated = {}
+        scheduler_keys = {"news_poll_interval", "x_sentiment_interval"}
+        needs_scheduler_reload = False
         for key, value in body.model_dump(exclude_none=True).items():
             await set_setting(db, key, value)
             updated[key] = _redact(key, value)
-        return {"updated": updated, "message": "Settings saved to database"}
+            if key in scheduler_keys:
+                needs_scheduler_reload = True
+
+        msg = "Settings saved to database"
+
+        # Reload scheduler if interval settings changed
+        if needs_scheduler_reload:
+            try:
+                from app.utils.scheduler import stop_scheduler, start_scheduler
+                stop_scheduler()
+                await start_scheduler()
+                msg += ". Scheduler reloaded with new intervals."
+            except Exception as e:
+                logger.error(f"Failed to reload scheduler: {e}")
+                msg += ". Warning: scheduler reload failed, restart backend to apply interval changes."
+
+        return {"updated": updated, "message": msg}
     finally:
         await db.close()
 

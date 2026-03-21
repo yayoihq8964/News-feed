@@ -27,9 +27,9 @@ async def get_latest_sentiment():
 
 @router.post("/refresh")
 async def refresh_x_sentiment(background_tasks: BackgroundTasks):
-    """Trigger a new X/Twitter sentiment analysis via Grok."""
+    """Trigger a new LLM-based social sentiment estimation via Grok."""
     background_tasks.add_task(run_x_sentiment_analysis)
-    return {"status": "triggered", "message": "X sentiment analysis started in background"}
+    return {"status": "triggered", "message": "Social sentiment estimation started in background"}
 
 
 @router.get("/history")
