@@ -58,6 +58,9 @@ export const getAnalyses = (params?: { page?: number; page_size?: number }) => {
 export const getLatestAnalyses = (n = 20) =>
   request<Analysis[]>(`/api/analysis/latest?n=${n}`);
 
+export const getAnalysisByNewsId = (newsId: number) =>
+  request<{ analysis: Analysis; news: NewsItem | null }>(`/api/analysis/by-news/${newsId}`);
+
 export const triggerAnalysis = () =>
   request<{ triggered: number }>('/api/analysis/trigger', { method: 'POST' });
 
@@ -82,8 +85,13 @@ export const getXSentimentHistory = async (): Promise<XSentiment[]> => {
 export const getSettings = () =>
   request<AppSettings>('/api/settings');
 
+export interface SettingsUpdateResponse {
+  updated: Record<string, unknown>;
+  message: string;
+}
+
 export const updateSettings = (settings: Partial<AppSettings>) =>
-  request<AppSettings>('/api/settings', {
+  request<SettingsUpdateResponse>('/api/settings', {
     method: 'PUT',
     body: JSON.stringify(settings),
   });

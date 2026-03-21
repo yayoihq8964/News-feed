@@ -10,7 +10,7 @@
 - **Dark/Light Mode** — Material Design 3 色彩系统，自动/手动切换
 - **Responsive** — 桌面三栏布局 + 手机底部导航适配
 - **News Images** — 自动抓取新闻配图（NewsAPI/GNews/Finnhub）
-- **X/Twitter Sentiment** — 通过 Grok 分析散户情绪
+- **Social Sentiment Estimation** — 通过 Grok LLM 估算散户情绪（非实时社交数据）
 
 ## 🎨 Design System
 
@@ -79,9 +79,9 @@ docker-compose up -d
 
 **Backend:**
 ```bash
-cd backend
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+# Run from project root (so .env is found automatically)
+pip install -r backend/requirements.txt
+cd backend && uvicorn app.main:app --reload --port 8000
 ```
 
 **Frontend:**

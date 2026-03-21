@@ -205,7 +205,10 @@ export default function SentimentDashboard() {
         {/* Trending Tickers from X */}
         {xData && xData.trending_tickers.length > 0 && (
           <section className="bg-surface-container-lowest dark:bg-slate-900 rounded-2xl p-6 md:p-8">
-            <h3 className="font-bold font-headline mb-4 dark:text-white">Social Buzz</h3>
+            <div className="flex items-center gap-2 mb-4">
+              <h3 className="font-bold font-headline dark:text-white">Social Buzz</h3>
+              <span className="text-[10px] font-bold bg-surface-container dark:bg-slate-700 text-on-surface-variant dark:text-slate-400 px-2 py-0.5 rounded-full uppercase">LLM Estimate</span>
+            </div>
             <p className="text-xs text-on-surface-variant dark:text-slate-400 mb-4">
               Retail sentiment: <span className={`font-bold ${xData.retail_sentiment_score >= 0 ? 'text-tertiary dark:text-emerald-400' : 'text-error dark:text-red-400'}`}>
                 {xData.retail_sentiment_score > 0 ? '+' : ''}{xData.retail_sentiment_score}

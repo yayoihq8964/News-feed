@@ -8,6 +8,8 @@ from app.models.database import (
     get_analyses,
     get_latest_analyses,
     get_analysis_stats,
+    get_analysis_for_news,
+    get_news_item_by_id,
 )
 from app.services.llm_analyzer import run_analysis_batch
 
@@ -15,11 +17,25 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/analysis", tags=["analysis"])
 
 
+@router.get("/by-news/{news_id}")
+async def get_analysis_by_news_id(news_id: int):
+    """Get analysis for a specific news item by its news_id."""
+    db = await get_db()
+    try:
+        analysis = await get_analysis_for_news(db, news_id)
+        if not analysis:
+            raise HTTPException(status_code=404, detail="No analysis found for this news item")
+        news = await get_news_item_by_id(db, news_id)
+        return {"analysis": analysis, "news": news}
+    finally:
+        await db.close()
+
+
 @router.get("")
 async def list_analyses(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    classification: Optional[str] = Query(None, regex="^(bullish|bearish|neutral)$"),
+    classification: Optional[str] = Query(None, pattern="^(bullish|bearish|neutral)$"),
     date_from: Optional[str] = Query(None),
     date_to: Optional[str] = Query(None),
 ):

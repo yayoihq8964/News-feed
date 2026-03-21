@@ -28,7 +28,7 @@ async def lifespan(app: FastAPI):
     await init_db()
 
     # Start background scheduler
-    start_scheduler()
+    await start_scheduler()
 
     logger.info("MacroLens backend ready")
     yield
@@ -46,11 +46,17 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS - allow all origins for development
+# CORS configuration
+_cors_origins = os.environ.get("CORS_ORIGINS", "").split(",")
+_cors_origins = [o.strip() for o in _cors_origins if o.strip()]
+if not _cors_origins:
+    # Development fallback: allow all origins without credentials
+    _cors_origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=_cors_origins,
+    allow_credentials=("*" not in _cors_origins),  # credentials not allowed with wildcard
     allow_methods=["*"],
     allow_headers=["*"],
 )

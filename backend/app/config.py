@@ -1,7 +1,21 @@
 import logging
+import os
+from pathlib import Path
 from pydantic_settings import BaseSettings
 
 logger = logging.getLogger(__name__)
+
+
+def _find_env_file() -> str:
+    """Find .env file: check CWD first, then project root (parent of backend/)."""
+    candidates = [
+        Path.cwd() / ".env",                         # CWD (Docker or project root)
+        Path(__file__).resolve().parent.parent.parent / ".env",  # backend/app/config.py -> ../../.env (project root)
+    ]
+    for p in candidates:
+        if p.is_file():
+            return str(p)
+    return ".env"  # fallback
 
 
 class Settings(BaseSettings):
@@ -26,10 +40,12 @@ class Settings(BaseSettings):
     # App
     news_poll_interval: int = 60  # seconds
     analysis_batch_size: int = 10
+    x_sentiment_interval: int = 1800  # seconds (30 minutes)
     database_url: str = "sqlite+aiosqlite:///data/macrolens.db"
 
     class Config:
-        env_file = ".env"
+        env_file = _find_env_file()
+        env_file_encoding = "utf-8"
 
     def validate_config(self) -> list[str]:
         """Check for common config mistakes. Returns list of warnings."""

@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom'
 import { useApi } from '../../hooks/useApi'
-import { getAnalyses, getNews, triggerAnalysis } from '../../services/api'
+import { getAnalysisByNewsId, getAnalyses, getNews, triggerAnalysis } from '../../services/api'
 import type { Analysis, NewsItem } from '../../types'
 import LoadingSpinner from '../common/LoadingSpinner'
 import SentimentChip from '../common/SentimentChip'
@@ -11,7 +11,15 @@ export default function DeepAnalysis() {
   const { id } = useParams<{ id: string }>()
   const [triggerMsg, setTriggerMsg] = useState<string | null>(null)
 
-  // If we have a specific news ID, load its analysis; otherwise load latest analyses
+  const selectedNewsId = id ? parseInt(id) : null
+
+  // Direct fetch by news_id when available
+  const directApi = useApi<{ analysis: Analysis; news: NewsItem | null }>(
+    () => selectedNewsId ? getAnalysisByNewsId(selectedNewsId) : Promise.reject('no id'),
+    [selectedNewsId]
+  )
+
+  // Fallback: load latest analyses for the listing view
   const analysesApi = useApi<{ items: Analysis[]; total: number }>(
     () => getAnalyses({ page: 1, page_size: 20 }),
     []
@@ -21,16 +29,23 @@ export default function DeepAnalysis() {
   const analyses = analysesApi.data?.items ?? []
   const newsItems = newsApi.data?.items ?? []
 
-  // Find the specific analysis if an ID is given
-  const selectedNewsId = id ? parseInt(id) : null
-  const selectedAnalysis = selectedNewsId
+  // Use direct API result first, then fallback to list search
+  const selectedAnalysis = selectedNewsId && directApi.data
+    ? directApi.data.analysis
+    : selectedNewsId
     ? analyses.find(a => a.news_id === selectedNewsId)
     : analyses[0]
 
   // Find matching news item for image
-  const matchedNews = selectedAnalysis
+  const matchedNews = selectedNewsId && directApi.data?.news
+    ? directApi.data.news
+    : selectedAnalysis
     ? newsItems.find(n => n.id === selectedAnalysis.news_id)
     : null
+
+  const isLoading = selectedNewsId
+    ? (directApi.loading && analysesApi.loading)
+    : analysesApi.loading
 
   const handleTrigger = async () => {
     setTriggerMsg('Analysis triggered...')
@@ -46,7 +61,7 @@ export default function DeepAnalysis() {
     }
   }
 
-  if (analysesApi.loading && !analysesApi.data) {
+  if (isLoading && !analysesApi.data && !directApi.data) {
     return <LoadingSpinner className="py-20" />
   }
 
@@ -96,7 +111,7 @@ export default function DeepAnalysis() {
   // Parse JSON strings from backend
   const affectedStocks = safeParseJson<Array<{ ticker: string; impact_score: number; reason: string }>>(selectedAnalysis.affected_stocks) ?? []
   const keyFactors = safeParseJson<string[]>(selectedAnalysis.key_factors) ?? []
-  const affectedCommodities = safeParseJson<string[]>(selectedAnalysis.affected_commodities) ?? []
+  const affectedCommodities = safeParseJson<Array<{ name: string; impact_score: number; reason: string }>>(selectedAnalysis.affected_commodities) ?? []
   const affectedSectors = safeParseJson<string[]>(selectedAnalysis.affected_sectors) ?? []
 
   // Confidence score
@@ -348,16 +363,27 @@ export default function DeepAnalysis() {
                 Commodity Impact
               </h3>
               <div className="space-y-3">
-                {affectedCommodities.map((c, i) => (
-                  <div key={i} className="flex items-center gap-3 p-3 bg-surface-container-lowest dark:bg-slate-800 rounded-xl">
-                    <span className="material-symbols-outlined text-amber-500">
-                      {c.toLowerCase().includes('oil') ? 'oil_barrel' :
-                       c.toLowerCase().includes('gold') ? 'diamond' :
-                       c.toLowerCase().includes('wheat') || c.toLowerCase().includes('grain') ? 'grain' : 'toll'}
-                    </span>
-                    <span className="text-sm dark:text-slate-300">{c}</span>
-                  </div>
-                ))}
+                {affectedCommodities.map((c, i) => {
+                  const n = c.name.toLowerCase()
+                  const isPositive = c.impact_score > 0
+                  return (
+                    <div key={i} className="flex items-center gap-3 p-3 bg-surface-container-lowest dark:bg-slate-800 rounded-xl">
+                      <span className="material-symbols-outlined text-amber-500">
+                        {n.includes('oil') || n.includes('crude') ? 'oil_barrel' :
+                         n.includes('gold') ? 'diamond' :
+                         n.includes('wheat') || n.includes('grain') || n.includes('corn') ? 'grain' :
+                         n.includes('silver') ? 'toll' : 'monitoring'}
+                      </span>
+                      <div className="flex-1">
+                        <span className="text-sm font-semibold dark:text-slate-300">{c.name}</span>
+                        {c.reason && <p className="text-xs text-on-surface-variant dark:text-slate-500 mt-0.5">{c.reason}</p>}
+                      </div>
+                      <span className={`text-sm font-bold ${isPositive ? 'text-tertiary dark:text-emerald-400' : 'text-error dark:text-red-400'}`}>
+                        {isPositive ? '▲' : '▼'} {Math.abs(c.impact_score)}
+                      </span>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )}

@@ -22,7 +22,7 @@ COUNTRY_MAP = {
     "CAD": "🇨🇦 加拿大", "CHF": "🇨🇭 瑞士", "NZD": "🇳🇿 新西兰",
 }
 
-IMPACT_MAP = {"High": "高", "Medium": "中", "Low": "低", "Holiday": "假日"}
+IMPACT_MAP = {"high": "高", "medium": "中", "low": "低", "holiday": "假日"}
 
 
 async def fetch_economic_calendar() -> list[dict]:
@@ -61,7 +61,7 @@ async def fetch_economic_calendar() -> list[dict]:
         events = []
         for e in raw:
             country_code = e.get("country", "")
-            impact = e.get("impact", "")
+            impact = (e.get("impact", "") or "").lower()  # normalize to lowercase
             events.append({
                 "date": e.get("date", ""),
                 "title": e.get("title", ""),
@@ -79,7 +79,7 @@ async def fetch_economic_calendar() -> list[dict]:
         events = [
             e for e in events
             if e["country_code"] in major_currencies
-            and (e["impact"] in ("High", "Medium") or e["actual"])
+            and (e["impact"] in ("high", "medium") or e["actual"])
         ]
         events.sort(key=lambda x: x["date"])
 

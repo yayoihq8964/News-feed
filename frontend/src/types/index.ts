@@ -19,7 +19,7 @@ export interface CalendarEvent {
   title: string;
   country_code: string;
   country: string;
-  impact: string;
+  impact: 'high' | 'medium' | 'low' | 'holiday' | string;
   impact_zh: string;
   forecast: string;
   previous: string;

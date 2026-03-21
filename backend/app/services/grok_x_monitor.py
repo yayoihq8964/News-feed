@@ -18,28 +18,28 @@ def get_last_error() -> Optional[str]:
     return _last_error
 
 
-X_SENTIMENT_PROMPT = """You are a social media financial sentiment analyst. Analyze current trending financial discussions on X/Twitter.
+X_SENTIMENT_PROMPT = """You are a financial sentiment analyst. Based on your training knowledge and understanding of current market conditions, estimate what retail investor sentiment on social media (X/Twitter) likely looks like right now.
 
-Based on your knowledge of recent X/Twitter financial discussions, provide a JSON response:
+NOTE: This is an LLM-based estimation, NOT real-time data. Provide your best-effort assessment in the following JSON format:
 {
   "trending_tickers": [
-    {"ticker": "<ticker>", "mention_sentiment": "<bullish|bearish|mixed>", "buzz_level": "<high|medium|low>", "narrative": "<what people are saying>"}
+    {"ticker": "<ticker>", "mention_sentiment": "<bullish|bearish|mixed>", "buzz_level": "<high|medium|low>", "narrative": "<estimated discussion topic>"}
   ],
   "overall_retail_sentiment": <-100 to 100>,
   "key_narratives": ["<narrative1>", ...],
   "meme_stock_alerts": [
-    {"ticker": "<ticker>", "risk_level": "<high|medium|low>", "description": "<what's happening>"}
+    {"ticker": "<ticker>", "risk_level": "<high|medium|low>", "description": "<what might be happening>"}
   ],
   "fear_greed_estimate": <0-100, 0=extreme fear, 100=extreme greed>
 }
 
-Provide your best assessment based on recent financial social media trends. Include at least 5 trending tickers."""
+Include at least 5 tickers you estimate are likely trending. Be honest about the speculative nature of this analysis."""
 
-X_SYSTEM_PROMPT = "You are a financial social media analyst specializing in retail investor sentiment on X/Twitter. Provide structured JSON analysis of current financial discussions and trending topics."
+X_SYSTEM_PROMPT = "You are a financial market analyst. You estimate retail investor sentiment based on your knowledge of market trends and social media patterns. Your outputs are LLM-based estimations, not real-time social media data. Provide structured JSON analysis."
 
 
 async def run_x_sentiment_analysis() -> Optional[dict]:
-    """Run Grok-based X sentiment analysis and store results."""
+    """Run Grok-based sentiment estimation (LLM-estimated, not real-time X data)."""
     global _last_error
     db = await get_db()
     try:
@@ -86,7 +86,7 @@ async def run_x_sentiment_analysis() -> Optional[dict]:
         meme_stocks = parsed.get("meme_stock_alerts", [])
 
         sentiment_record = {
-            "query": "X/Twitter financial sentiment analysis",
+            "query": "LLM-estimated social media financial sentiment (not real-time data)",
             "trending_tickers": json.dumps(trending),
             "retail_sentiment_score": int(parsed.get("overall_retail_sentiment", 0)),
             "key_narratives": json.dumps(parsed.get("key_narratives", [])),
