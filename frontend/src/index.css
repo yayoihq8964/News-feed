@@ -29,10 +29,12 @@ body {
     box-shadow: 0 2px 12px rgba(0,0,0,0.25);
   }
   .panel-subtle {
-    @apply bg-[#f4f6f1] border-[#eaeee6];
+    background-color: #f4f6f1;
+    border-color: #eaeee6;
   }
   .dark .panel-subtle {
-    @apply bg-moss-900/60 border-moss-700/40;
+    background-color: rgba(14,26,19,0.6);
+    border-color: rgba(30,45,40,0.4);
   }
 
   /* Page background — warm parchment */
@@ -83,11 +85,11 @@ body {
 
   /* Pills / badges */
   .pill-bg {
-    @apply bg-[#edf2e6];
+    background-color: #edf2e6;
     box-shadow: 0 1px 2px rgba(63,79,58,0.05);
   }
   .dark .pill-bg {
-    @apply bg-moss-700/60;
+    background-color: rgba(30,45,40,0.6);
     box-shadow: 0 1px 2px rgba(0,0,0,0.15);
   }
 
@@ -100,11 +102,11 @@ body {
   }
 
   /* Hover */
-  .hover-surface {
-    @apply hover:bg-[#edf2e6];
+  .hover-surface:hover {
+    background-color: #edf2e6;
   }
-  .dark .hover-surface {
-    @apply hover:bg-moss-700;
+  .dark .hover-surface:hover {
+    background-color: #1e2d28;
   }
 }
 
