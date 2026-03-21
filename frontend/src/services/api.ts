@@ -62,7 +62,7 @@ export const getAnalysisByNewsId = (newsId: number) =>
   request<{ analysis: Analysis; news: NewsItem | null }>(`/api/analysis/by-news/${newsId}`);
 
 export const triggerAnalysis = () =>
-  request<{ triggered: number }>('/api/analysis/trigger', { method: 'POST' });
+  request<import('../types').TriggerAnalysisResponse>('/api/analysis/trigger', { method: 'POST' });
 
 export const getAnalysisStats = () =>
   request<AnalysisStats>('/api/analysis/stats');
@@ -74,7 +74,7 @@ export const getXSentiment = async (): Promise<XSentiment | null> => {
 };
 
 export const refreshXSentiment = () =>
-  request<XSentiment>('/api/x-sentiment/refresh', { method: 'POST' });
+  request<import('../types').RefreshXSentimentResponse>('/api/x-sentiment/refresh', { method: 'POST' });
 
 export const getXSentimentHistory = async (): Promise<XSentiment[]> => {
   const res = await request<{ items: XSentiment[]; total: number }>('/api/x-sentiment/history');

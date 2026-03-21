@@ -64,7 +64,7 @@ export default function NewsCard({ item }: NewsCardProps) {
                 key={stock.ticker}
                 classification={stock.impact_score > 0 ? 'bullish' : 'bearish'}
                 ticker={stock.ticker}
-                score={Math.round(Math.abs(stock.impact_score * 100))}
+                score={Math.round(Math.abs(stock.impact_score))}
                 size="sm"
               />
             ))}

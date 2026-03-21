@@ -1,15 +1,18 @@
 import { Link, useLocation } from 'react-router-dom'
 
 const navItems = [
-  { icon: 'show_chart', label: 'Markets', path: '/' },
+  { icon: 'newspaper', label: 'News Feed', path: '/' },
   { icon: 'psychology', label: 'Sentiment', path: '/sentiment' },
   { icon: 'auto_awesome', label: 'Deep Analysis', path: '/analysis' },
-  { icon: 'trending_up', label: 'Trending', path: '/' },
-  { icon: 'toll', label: 'Commodities', path: '/' },
 ]
 
 export default function Sidebar() {
   const location = useLocation()
+
+  const isActive = (path: string) => {
+    if (path === '/') return location.pathname === '/'
+    return location.pathname.startsWith(path)
+  }
 
   return (
     <aside className="hidden lg:flex flex-col gap-4 p-6 w-64 fixed left-0 top-16 h-[calc(100vh-64px)] overflow-y-auto bg-slate-100 dark:bg-slate-900 custom-scrollbar z-40">
@@ -24,7 +27,7 @@ export default function Sidebar() {
 
       <nav className="flex flex-col gap-1">
         {navItems.map((item) => {
-          const active = location.pathname === item.path
+          const active = isActive(item.path)
           return (
             <Link
               key={item.label}

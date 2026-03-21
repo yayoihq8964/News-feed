@@ -85,22 +85,47 @@ export interface MemeStockAlert {
   description: string;
 }
 
+// Settings — matches the merged dict from GET /api/settings
 export interface AppSettings {
   default_llm_provider: string;
   default_llm_model: string;
+  default_llm_api_key: string;
+  openai_api_key: string;
+  anthropic_api_key: string;
+  grok_api_key: string;
+  ollama_base_url: string;
   news_poll_interval: number;
   analysis_batch_size: number;
-  finnhub_configured: boolean;
-  newsapi_configured: boolean;
-  gnews_configured: boolean;
-  grok_configured: boolean;
-  available_providers: ProviderInfo[];
+  x_sentiment_interval: number;
+  finnhub_api_key: string;
+  newsapi_api_key: string;
+  gnews_api_key: string;
+  [key: string]: unknown; // DB overrides may add extra keys
 }
 
+// Providers — from GET /api/settings/providers
 export interface ProviderInfo {
   name: string;
   configured: boolean;
   models: string[];
+}
+
+// Trigger / refresh responses
+export interface TriggerAnalysisResponse {
+  status: string;
+  batch_size: number;
+}
+
+export interface RefreshXSentimentResponse {
+  status: string;
+  message: string;
+}
+
+// Stats — from GET /api/analysis/stats
+export interface TopAffectedStockStat {
+  ticker: string;
+  avg_impact: number;
+  mention_count: number;
 }
 
 export interface AnalysisStats {
@@ -111,7 +136,7 @@ export interface AnalysisStats {
   neutral_count: number;
   pending_count?: number;
   sector_breakdown?: Record<string, number>;
-  top_affected_stocks?: AffectedStock[];
+  top_affected_stocks?: TopAffectedStockStat[];
 }
 
 export interface NewsListResponse {
