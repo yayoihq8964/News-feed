@@ -99,3 +99,15 @@ input[type="range"] { accent-color: #6366f1; }
 @keyframes gradient-spin {
   to { transform: rotate(360deg); }
 }
+
+/* Price change flash */
+@keyframes price-flash-up {
+  0% { background-color: rgba(16, 185, 129, 0.25); }
+  100% { background-color: transparent; }
+}
+@keyframes price-flash-down {
+  0% { background-color: rgba(244, 63, 94, 0.25); }
+  100% { background-color: transparent; }
+}
+.flash-up { animation: price-flash-up 0.8s ease-out; }
+.flash-down { animation: price-flash-down 0.8s ease-out; }

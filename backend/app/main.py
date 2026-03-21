@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.models.database import init_db
 from app.utils.scheduler import start_scheduler, stop_scheduler
 from app.routers import news, analysis, x_sentiment, settings, calendar
+from app.routers import quotes
 
 logging.basicConfig(
     level=logging.INFO,
@@ -60,6 +61,7 @@ app.include_router(analysis.router)
 app.include_router(x_sentiment.router)
 app.include_router(settings.router)
 app.include_router(calendar.router)
+app.include_router(quotes.router)
 
 
 @app.get("/health")

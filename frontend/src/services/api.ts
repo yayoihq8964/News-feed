@@ -97,6 +97,20 @@ export const testLlm = (provider: string, model: string, apiKey?: string) =>
     body: JSON.stringify({ provider, model, api_key: apiKey }),
   });
 
+// Market Quotes
+export interface MarketQuote {
+  symbol: string
+  name: string
+  label: string
+  price: number | null
+  change: number | null
+  changePercent: number | null
+  previousClose: number | null
+}
+
+export const getMarketQuotes = () =>
+  request<{ quotes: MarketQuote[] }>('/api/quotes')
+
 // Calendar
 export const getCalendar = () =>
   request<{ events: CalendarEvent[]; count: number }>('/api/calendar');

@@ -4,6 +4,7 @@ import { useApi } from './hooks/useApi'
 import { usePolling } from './hooks/usePolling'
 
 import Header from './components/Header'
+import MarketIndices from './components/MarketIndices'
 import NewsFeed from './components/NewsFeed'
 import MarketSentiment from './components/MarketSentiment'
 import MarketClock from './components/MarketClock'
@@ -42,6 +43,7 @@ export default function App() {
     <div className="min-h-screen page-bg">
       <Header stats={statsApi.data} onFetch={handleFetch} onAnalyze={handleAnalyze} onSettings={() => setShowSettings(true)} />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-5 pb-12">
+        <MarketIndices />
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-8">
             <NewsFeed items={news} loading={newsApi.loading} filter={filter} onFilterChange={setFilter} />
