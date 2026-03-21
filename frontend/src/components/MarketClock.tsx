@@ -11,21 +11,20 @@ function getETComponents(now: Date) {
   const get = (type: string) => parts.find(p => p.type === type)?.value ?? ''
   const hour = parseInt(get('hour')) || 0
   const minute = parseInt(get('minute')) || 0
-  const second = parseInt(get('second')) || 0
   const weekday = get('weekday')
   const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(weekday)
   const dateStr = `${weekday} ${get('month')} ${get('day')}`
   const timeStr = `${String(hour).padStart(2, '0')}:${get('minute').padStart(2, '0')}:${get('second').padStart(2, '0')}`
-  return { hour, minute, second, weekday, dayOfWeek, dateStr, timeStr }
+  return { hour, minute, weekday, dayOfWeek, dateStr, timeStr }
 }
 
 function getMarketStatus(etHour: number, etMin: number, dayOfWeek: number): { label: string; color: string } {
-  if (dayOfWeek === 0 || dayOfWeek === 6) return { label: '休市', color: 'text-slate-400' }
+  if (dayOfWeek === 0 || dayOfWeek === 6) return { label: '休市', color: 'text-earth-400' }
   const t = etHour * 60 + etMin
-  if (t >= 570 && t < 960) return { label: '常规交易时段', color: 'text-teal-500' }
+  if (t >= 570 && t < 960) return { label: '常规交易时段', color: 'text-leaf-500 dark:text-leaf-400' }
   if (t >= 240 && t < 570) return { label: '盘前', color: 'text-amber-500' }
   if (t >= 960 && t < 1200) return { label: '盘后', color: 'text-amber-500' }
-  return { label: '休市', color: 'text-slate-400' }
+  return { label: '休市', color: 'text-earth-400' }
 }
 
 function formatTime(d: Date): string {
@@ -53,7 +52,7 @@ export default function MarketClock() {
   const isTrading = status.label === '常规交易时段'
 
   return (
-    <div className="rounded-2xl border panel p-4">
+    <div className="rounded-[1.25rem] border panel p-4 bio-lift">
       <h3 className="text-xs font-semibold text-muted-more uppercase tracking-wide mb-3">市场时间</h3>
       <div className="space-y-3">
         {/* US Market */}
@@ -67,7 +66,7 @@ export default function MarketClock() {
           </div>
           <div className="text-right">
             <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
-              isTrading ? 'bg-teal-500/10 text-teal-500' :
+              isTrading ? 'bg-leaf-500/10 text-leaf-500 dark:text-leaf-400' :
               status.label === '休市' ? 'pill-bg text-muted' :
               'bg-amber-500/10 text-amber-500'
             }`}>{status.label}</span>

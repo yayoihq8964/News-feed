@@ -40,11 +40,11 @@ export default function SettingsModal({ onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-lg max-h-[80vh] overflow-y-auto panel rounded-2xl border shadow-2xl p-6 m-4">
+      <div className="absolute inset-0 bg-moss-500/30 dark:bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-lg max-h-[80vh] overflow-y-auto panel rounded-[1.5rem] border shadow-[0_20px_40px_rgba(63,79,58,0.12)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.4)] p-6 m-4">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold">设置</h2>
-          <button onClick={onClose} className="text-muted hover:opacity-70 transition-colors">
+          <button onClick={onClose} className="text-muted hover:opacity-70 transition-colors duration-200">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
@@ -57,7 +57,7 @@ export default function SettingsModal({ onClose }: Props) {
                 <select
                   value={(settings as Record<string, string>).default_llm_provider ?? 'openai'}
                   onChange={e => update('default_llm_provider', e.target.value)}
-                  className="w-full text-sm rounded-xl border input-surface px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500/30 appearance-none">
+                  className="w-full text-sm rounded-xl border input-surface px-3 py-2 outline-none focus:ring-2 focus:ring-leaf-500/30 appearance-none transition-all duration-200">
                   {providers.map(p => (
                     <option key={p.name} value={p.name}>{p.name}{p.configured ? ' ✓' : ''}</option>
                   ))}
@@ -68,7 +68,7 @@ export default function SettingsModal({ onClose }: Props) {
                   value={(settings as Record<string, string>).default_llm_model ?? ''}
                   onChange={e => update('default_llm_model', e.target.value)}
                   placeholder="gpt-4o"
-                  className="w-full text-sm rounded-xl border input-surface px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500/30" />
+                  className="w-full text-sm rounded-xl border input-surface px-3 py-2 outline-none focus:ring-2 focus:ring-leaf-500/30 transition-all duration-200" />
               </Field>
             </div>
           </section>
@@ -79,22 +79,22 @@ export default function SettingsModal({ onClose }: Props) {
               <input type="range" min="30" max="600" step="30"
                 value={(settings as Record<string, number>).news_poll_interval ?? 60}
                 onChange={e => update('news_poll_interval', parseInt(e.target.value))}
-                className="w-full accent-indigo-500" />
+                className="w-full accent-leaf-500" />
             </Field>
           </section>
 
           <div className="flex items-center gap-3 pt-3 border-t timeline-border">
             <button onClick={handleSave} disabled={saving}
-              className="flex-1 text-sm font-medium py-2 rounded-xl bg-indigo-500 text-white hover:bg-indigo-600 disabled:opacity-50 transition-all shadow-sm hover:shadow">
+              className="flex-1 text-sm font-medium py-2 rounded-xl bg-leaf-500 text-white hover:bg-leaf-600 hover:shadow-[0_4px_12px_rgba(127,168,80,0.3)] disabled:opacity-50 transition-all duration-200 active:scale-95">
               {saving ? '保存中...' : '保存设置'}
             </button>
             <button onClick={handleTest} disabled={testing}
-              className="text-sm font-medium px-4 py-2 rounded-xl border panel text-muted hover-surface disabled:opacity-50 transition-all shadow-sm">
+              className="text-sm font-medium px-4 py-2 rounded-xl border panel text-muted hover-surface disabled:opacity-50 transition-all duration-200">
               {testing ? '测试中...' : '测试连接'}
             </button>
           </div>
           {testResult && (
-            <p className={`text-xs text-center ${testResult.includes('成功') || testResult.includes('✓') ? 'text-teal-500' : 'text-rose-500'}`}>
+            <p className={`text-xs text-center ${testResult.includes('成功') || testResult.includes('✓') ? 'text-leaf-500 dark:text-leaf-400' : 'text-coral-500 dark:text-coral-400'}`}>
               {testResult}
             </p>
           )}

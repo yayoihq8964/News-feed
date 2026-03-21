@@ -50,18 +50,20 @@ export default function App() {
   }
 
   const analyses = analysesApi.data ?? []
-  // News API now includes analysis via LEFT JOIN - no client merge needed
   const news = newsApi.data?.items ?? []
 
   return (
-    <div className="min-h-screen page-bg">
+    <div className="min-h-screen page-bg relative">
+      {/* Paper / leaf-vein noise overlay */}
+      <div className="noise-overlay" />
+
       <Header
         stats={statsApi.data}
         onFetch={handleFetch}
         onAnalyze={handleAnalyze}
         onSettings={() => setShowSettings(true)}
       />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-12">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-12 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-8">
             <NewsFeed items={news} loading={newsApi.loading} filter={filter} onFilterChange={setFilter} />

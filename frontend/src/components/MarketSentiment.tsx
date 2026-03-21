@@ -10,10 +10,10 @@ export default function MarketSentiment({ stats }: Props) {
   const total = bullish + bearish + neutral || 1
 
   const label = avg > 10 ? '偏多' : avg < -10 ? '偏空' : '中性'
-  const color = avg > 10 ? 'text-teal-500' : avg < -10 ? 'text-rose-500' : 'text-muted'
+  const color = avg > 10 ? 'text-leaf-500 dark:text-leaf-400' : avg < -10 ? 'text-coral-500 dark:text-coral-400' : 'text-muted'
 
   return (
-    <div className="rounded-2xl border panel p-4">
+    <div className="rounded-[1.25rem] border panel p-4 bio-lift">
       <h3 className="text-xs font-semibold text-muted-more uppercase tracking-wide mb-3">市场情绪</h3>
       <div className="flex items-center gap-4 mb-4">
         <div className={`text-3xl font-mono font-bold ${color}`}>
@@ -24,15 +24,15 @@ export default function MarketSentiment({ stats }: Props) {
           <div className="text-[10px] text-muted-more">平均情绪指数</div>
         </div>
       </div>
-      <div className="flex h-2 rounded-full overflow-hidden bg-slate-100 dark:bg-[#1a2240] mb-2">
-        <div className="bg-teal-500 transition-all" style={{ width: `${(bullish / total) * 100}%` }} />
-        <div className="bg-slate-300 dark:bg-slate-600 transition-all" style={{ width: `${(neutral / total) * 100}%` }} />
-        <div className="bg-rose-500 transition-all" style={{ width: `${(bearish / total) * 100}%` }} />
+      <div className="flex h-2 rounded-full overflow-hidden bg-paper-200 dark:bg-moss-700 mb-2">
+        <div className="bg-leaf-500 transition-all duration-500" style={{ width: `${(bullish / total) * 100}%` }} />
+        <div className="bg-earth-300 dark:bg-moss-400 transition-all duration-500" style={{ width: `${(neutral / total) * 100}%` }} />
+        <div className="bg-coral-500 transition-all duration-500" style={{ width: `${(bearish / total) * 100}%` }} />
       </div>
       <div className="flex justify-between text-[10px]">
-        <span className="text-teal-500">看多 {bullish}</span>
+        <span className="text-leaf-500 dark:text-leaf-400">看多 {bullish}</span>
         <span className="text-muted">中性 {neutral}</span>
-        <span className="text-rose-500">看空 {bearish}</span>
+        <span className="text-coral-500 dark:text-coral-400">看空 {bearish}</span>
       </div>
     </div>
   )

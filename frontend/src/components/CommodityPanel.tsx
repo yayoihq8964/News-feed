@@ -20,7 +20,7 @@ export default function CommodityPanel({ analyses }: Props) {
   }, [analyses])
 
   return (
-    <div className="rounded-2xl border panel p-4">
+    <div className="rounded-[1.25rem] border panel p-4 bio-lift">
       <h3 className="text-xs font-semibold text-muted-more uppercase tracking-wide mb-3">贵金属影响</h3>
       {agg.length === 0 ? (
         <p className="text-xs text-muted text-center py-4">暂无数据</p>
@@ -33,7 +33,7 @@ export default function CommodityPanel({ analyses }: Props) {
                 <span className="text-sm">{c.name}</span>
                 <span className="text-[10px] text-muted-more">({c.count}条)</span>
               </div>
-              <span className={`font-mono text-sm font-bold ${c.avg > 0 ? 'text-teal-500' : c.avg < 0 ? 'text-rose-500' : 'text-muted'}`}>
+              <span className={`font-mono text-sm font-bold ${c.avg > 0 ? 'text-leaf-500 dark:text-leaf-400' : c.avg < 0 ? 'text-coral-500 dark:text-coral-400' : 'text-muted'}`}>
                 {c.avg > 0 ? '+' : ''}{c.avg}
               </span>
             </div>
