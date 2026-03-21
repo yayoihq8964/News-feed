@@ -20,6 +20,8 @@ export function useApi<T>(
 
   useEffect(() => {
     let cancelled = false;
+    // Reset stale state when deps change
+    setData(null);
     setLoading(true);
     setError(null);
 
@@ -32,6 +34,7 @@ export function useApi<T>(
       })
       .catch(err => {
         if (!cancelled) {
+          setData(null);
           setError(err instanceof Error ? err.message : String(err));
           setLoading(false);
         }

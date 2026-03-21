@@ -16,7 +16,7 @@ async def get_latest_sentiment():
         sentiment = await get_latest_x_sentiment(db)
         if not sentiment:
             last_error = get_last_error()
-            msg = "No X sentiment data yet. Trigger a refresh to get started."
+            msg = "No social sentiment estimate yet. Trigger a refresh to generate an LLM-based analysis."
             if last_error:
                 msg = f"Last analysis failed: {last_error}"
             return {"message": msg, "data": None, "last_error": last_error}
