@@ -17,46 +17,54 @@ body {
 
 /* ===== Biophilic theme tokens ===== */
 @layer components {
-  /* Panels / Cards */
+  /* Panels / Cards — near-invisible border, very soft shadow */
   .panel {
-    @apply bg-paper-50 border-paper-200 text-moss-500;
-    box-shadow: 0 2px 10px rgba(63,79,58,0.05);
+    @apply bg-paper-50 text-moss-500;
+    border: 1px solid rgba(220,220,208,0.5);
+    box-shadow: 0 2px 10px rgba(63,79,58,0.04);
   }
   .dark .panel {
-    @apply bg-moss-800 border-moss-700 text-moss-50;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    @apply bg-moss-800 text-moss-50;
+    border: 1px solid rgba(40,60,48,0.5);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.25);
   }
   .panel-subtle {
-    @apply bg-paper-100 border-paper-200;
+    @apply bg-[#f4f6f1] border-[#eaeee6];
   }
   .dark .panel-subtle {
-    @apply bg-moss-900/60 border-moss-700/50;
+    @apply bg-moss-900/60 border-moss-700/40;
   }
 
-  /* Page background */
+  /* Page background — warm parchment */
   .page-bg {
-    @apply bg-[#f9f7f2] text-moss-500;
+    @apply text-moss-500;
+    background: linear-gradient(180deg, #f9f7f2 0%, #f4f6f1 100%);
   }
   .dark .page-bg {
-    @apply bg-moss-900 text-moss-50;
+    @apply text-moss-50;
+    background: linear-gradient(180deg, #0e1a13 0%, #0c1610 100%);
   }
 
   /* Header */
   .header-bg {
-    @apply bg-[#f9f7f2]/92 border-paper-200;
-    box-shadow: 0 1px 4px rgba(63,79,58,0.06);
+    background: rgba(249,247,242,0.92);
+    border-bottom: 1px solid rgba(220,220,208,0.4);
+    box-shadow: 0 1px 3px rgba(63,79,58,0.04);
   }
   .dark .header-bg {
-    @apply bg-moss-900/92 border-moss-700;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    background: rgba(14,26,19,0.92);
+    border-bottom: 1px solid rgba(40,60,48,0.4);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.35);
   }
 
   /* Inputs */
   .input-surface {
-    @apply bg-paper-100 border-paper-200 text-moss-500;
+    @apply bg-paper-100 text-moss-500;
+    border: 1px solid rgba(220,220,208,0.6);
   }
   .dark .input-surface {
-    @apply bg-moss-800 border-moss-700 text-moss-100;
+    @apply bg-moss-800 text-moss-100;
+    border: 1px solid rgba(40,60,48,0.5);
   }
 
   /* Muted text */
@@ -75,25 +83,25 @@ body {
 
   /* Pills / badges */
   .pill-bg {
-    @apply bg-paper-200;
-    box-shadow: 0 1px 3px rgba(63,79,58,0.06);
+    @apply bg-[#edf2e6];
+    box-shadow: 0 1px 2px rgba(63,79,58,0.05);
   }
   .dark .pill-bg {
-    @apply bg-moss-700/70;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    @apply bg-moss-700/60;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
   }
 
   /* Timeline border */
   .timeline-border {
-    @apply border-paper-200;
+    border-color: rgba(220,220,208,0.45);
   }
   .dark .timeline-border {
-    @apply border-moss-700/60;
+    border-color: rgba(40,60,48,0.35);
   }
 
   /* Hover */
   .hover-surface {
-    @apply hover:bg-paper-200;
+    @apply hover:bg-[#edf2e6];
   }
   .dark .hover-surface {
     @apply hover:bg-moss-700;
@@ -106,12 +114,12 @@ body {
   inset: 0;
   pointer-events: none;
   z-index: 50;
-  opacity: 0.025;
+  opacity: 0.03;
   mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 .dark .noise-overlay {
-  opacity: 0.015;
+  opacity: 0.02;
   mix-blend-mode: soft-light;
 }
 
@@ -141,14 +149,18 @@ input[type="range"] {
   animation: pin-pulse 2.5s ease-in-out infinite;
 }
 
-/* Biophilic hover lift */
-.bio-lift {
-  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+/* Biophilic card hover — light rises like sunlight */
+.bio-card {
+  transition: transform 0.22s ease, box-shadow 0.22s ease, filter 0.22s ease;
 }
-.bio-lift:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.02);
+.bio-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(63,79,58,0.09);
+  filter: brightness(1.015);
 }
-.bio-lift:active {
-  transform: translateY(0px);
+.dark .bio-card:hover {
+  box-shadow: 0 12px 28px rgba(0,0,0,0.35);
+}
+.bio-card:active {
+  transform: translateY(-1px);
 }

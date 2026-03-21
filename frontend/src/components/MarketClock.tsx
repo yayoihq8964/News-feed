@@ -21,9 +21,9 @@ function getETComponents(now: Date) {
 function getMarketStatus(etHour: number, etMin: number, dayOfWeek: number): { label: string; color: string } {
   if (dayOfWeek === 0 || dayOfWeek === 6) return { label: '休市', color: 'text-earth-400' }
   const t = etHour * 60 + etMin
-  if (t >= 570 && t < 960) return { label: '常规交易时段', color: 'text-leaf-500 dark:text-leaf-400' }
-  if (t >= 240 && t < 570) return { label: '盘前', color: 'text-amber-500' }
-  if (t >= 960 && t < 1200) return { label: '盘后', color: 'text-amber-500' }
+  if (t >= 570 && t < 960) return { label: '常规交易时段', color: 'text-leaf-600 dark:text-leaf-400' }
+  if (t >= 240 && t < 570) return { label: '盘前', color: 'text-amber-600 dark:text-amber-400' }
+  if (t >= 960 && t < 1200) return { label: '盘后', color: 'text-amber-600 dark:text-amber-400' }
   return { label: '休市', color: 'text-earth-400' }
 }
 
@@ -52,23 +52,22 @@ export default function MarketClock() {
   const isTrading = status.label === '常规交易时段'
 
   return (
-    <div className="rounded-[1.25rem] border panel p-4 bio-lift">
+    <div className="rounded-[2rem] panel p-6 bio-card">
       <h3 className="text-xs font-semibold text-muted-more uppercase tracking-wide mb-3">市场时间</h3>
       <div className="space-y-3">
-        {/* US Market */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-sm">🇺🇸</span>
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 bg-[#edf2e6] dark:bg-moss-700 rounded-tr-xl rounded-bl-xl flex items-center justify-center text-base">🇺🇸</div>
             <div>
               <p className="text-xs text-muted-more">纽约 (ET)</p>
               <p className="font-mono text-sm font-bold">{et.timeStr}</p>
             </div>
           </div>
           <div className="text-right">
-            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
-              isTrading ? 'bg-leaf-500/10 text-leaf-500 dark:text-leaf-400' :
+            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+              isTrading ? 'bg-leaf-500/10 text-leaf-600 dark:text-leaf-400' :
               status.label === '休市' ? 'pill-bg text-muted' :
-              'bg-amber-500/10 text-amber-500'
+              'bg-amber-500/10 text-amber-600 dark:text-amber-400'
             }`}>{status.label}</span>
             {isTrading && (
               <p className="text-[9px] text-muted-more mt-0.5">(不含节假日)</p>
@@ -77,10 +76,9 @@ export default function MarketClock() {
           </div>
         </div>
 
-        {/* Local */}
-        <div className="flex items-center justify-between border-t timeline-border pt-2">
-          <div className="flex items-center gap-2">
-            <span className="text-sm">🏠</span>
+        <div className="flex items-center justify-between border-t timeline-border pt-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 bg-[#edf2e6] dark:bg-moss-700 rounded-tr-xl rounded-bl-xl flex items-center justify-center text-base">🏠</div>
             <div>
               <p className="text-xs text-muted-more">本地时间</p>
               <p className="font-mono text-sm font-bold">{localTime}</p>

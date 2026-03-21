@@ -10,11 +10,10 @@ interface Props {
 
 export default function Header({ stats, onFetch, onAnalyze, onSettings }: Props) {
   return (
-    <header className="sticky top-0 z-40 border-b backdrop-blur-xl header-bg">
+    <header className="sticky top-0 z-40 backdrop-blur-xl header-bg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          {/* Organic leaf-shaped logo container */}
-          <div className="w-7 h-7 bg-leaf-700 rounded-tr-xl rounded-bl-xl flex items-center justify-center text-paper-50 text-sm">
+          <div className="w-8 h-8 bg-leaf-700 rounded-tr-xl rounded-bl-xl flex items-center justify-center text-paper-50 text-base">
             🔭
           </div>
           <div>
@@ -25,18 +24,18 @@ export default function Header({ stats, onFetch, onAnalyze, onSettings }: Props)
 
         <div className="hidden md:flex items-center gap-2">
           <StatPill label="已分析" value={stats?.total_analyzed ?? 0} />
-          <StatPill label="看多" value={stats?.bullish_count ?? 0} color="text-leaf-500 dark:text-leaf-400" />
+          <StatPill label="看多" value={stats?.bullish_count ?? 0} color="text-leaf-600 dark:text-leaf-400" />
           <StatPill label="看空" value={stats?.bearish_count ?? 0} color="text-coral-500 dark:text-coral-400" />
         </div>
 
         <div className="flex items-center gap-1.5">
           <button onClick={onFetch}
-            className="hidden sm:flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full pill-bg text-muted hover-surface transition-all duration-200 bio-lift">
+            className="hidden sm:flex items-center gap-1.5 text-xs font-medium px-3.5 py-1.5 rounded-2xl bg-[#e8ece6] dark:bg-moss-700 text-moss-500 dark:text-moss-100 hover:bg-[#dde2db] dark:hover:bg-moss-600 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-200 active:translate-y-0">
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
             获取新闻
           </button>
           <button onClick={onAnalyze}
-            className="hidden sm:flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-leaf-500 text-white hover:bg-leaf-600 hover:shadow-[0_4px_12px_rgba(127,168,80,0.3)] transition-all duration-200 active:scale-95 active:translate-y-0.5">
+            className="hidden sm:flex items-center gap-1.5 text-xs font-medium px-3.5 py-1.5 rounded-2xl bg-leaf-500 text-white hover:bg-[#8cb55d] hover:shadow-[0_4px_12px_rgba(127,168,80,0.3)] hover:-translate-y-0.5 transition-all duration-200 active:scale-95 active:translate-y-0">
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
             触发分析
           </button>

@@ -40,8 +40,8 @@ export default function SettingsModal({ onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
-      <div className="absolute inset-0 bg-moss-500/30 dark:bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-lg max-h-[80vh] overflow-y-auto panel rounded-[1.5rem] border shadow-[0_20px_40px_rgba(63,79,58,0.12)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.4)] p-6 m-4">
+      <div className="absolute inset-0 bg-moss-500/25 dark:bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-lg max-h-[80vh] overflow-y-auto panel rounded-[2rem] p-7 m-4" style={{ boxShadow: '0 20px 50px rgba(63,79,58,0.12)' }}>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold">设置</h2>
           <button onClick={onClose} className="text-muted hover:opacity-70 transition-colors duration-200">
@@ -57,7 +57,7 @@ export default function SettingsModal({ onClose }: Props) {
                 <select
                   value={(settings as Record<string, string>).default_llm_provider ?? 'openai'}
                   onChange={e => update('default_llm_provider', e.target.value)}
-                  className="w-full text-sm rounded-xl border input-surface px-3 py-2 outline-none focus:ring-2 focus:ring-leaf-500/30 appearance-none transition-all duration-200">
+                  className="w-full text-sm rounded-2xl input-surface px-3 py-2.5 outline-none focus:ring-2 focus:ring-leaf-500/30 appearance-none transition-all duration-200">
                   {providers.map(p => (
                     <option key={p.name} value={p.name}>{p.name}{p.configured ? ' ✓' : ''}</option>
                   ))}
@@ -68,7 +68,7 @@ export default function SettingsModal({ onClose }: Props) {
                   value={(settings as Record<string, string>).default_llm_model ?? ''}
                   onChange={e => update('default_llm_model', e.target.value)}
                   placeholder="gpt-4o"
-                  className="w-full text-sm rounded-xl border input-surface px-3 py-2 outline-none focus:ring-2 focus:ring-leaf-500/30 transition-all duration-200" />
+                  className="w-full text-sm rounded-2xl input-surface px-3 py-2.5 outline-none focus:ring-2 focus:ring-leaf-500/30 transition-all duration-200" />
               </Field>
             </div>
           </section>
@@ -85,16 +85,16 @@ export default function SettingsModal({ onClose }: Props) {
 
           <div className="flex items-center gap-3 pt-3 border-t timeline-border">
             <button onClick={handleSave} disabled={saving}
-              className="flex-1 text-sm font-medium py-2 rounded-xl bg-leaf-500 text-white hover:bg-leaf-600 hover:shadow-[0_4px_12px_rgba(127,168,80,0.3)] disabled:opacity-50 transition-all duration-200 active:scale-95">
+              className="flex-1 text-sm font-medium py-2.5 rounded-2xl bg-leaf-500 text-white hover:bg-[#8cb55d] hover:shadow-[0_4px_12px_rgba(127,168,80,0.3)] hover:-translate-y-0.5 disabled:opacity-50 transition-all duration-200 active:scale-95 active:translate-y-0">
               {saving ? '保存中...' : '保存设置'}
             </button>
             <button onClick={handleTest} disabled={testing}
-              className="text-sm font-medium px-4 py-2 rounded-xl border panel text-muted hover-surface disabled:opacity-50 transition-all duration-200">
+              className="text-sm font-medium px-5 py-2.5 rounded-2xl bg-[#e8ece6] dark:bg-moss-700 text-moss-500 dark:text-moss-100 hover:bg-[#dde2db] dark:hover:bg-moss-600 hover:-translate-y-0.5 disabled:opacity-50 transition-all duration-200 active:translate-y-0">
               {testing ? '测试中...' : '测试连接'}
             </button>
           </div>
           {testResult && (
-            <p className={`text-xs text-center ${testResult.includes('成功') || testResult.includes('✓') ? 'text-leaf-500 dark:text-leaf-400' : 'text-coral-500 dark:text-coral-400'}`}>
+            <p className={`text-xs text-center ${testResult.includes('成功') || testResult.includes('✓') ? 'text-leaf-600 dark:text-leaf-400' : 'text-coral-500 dark:text-coral-400'}`}>
               {testResult}
             </p>
           )}
@@ -107,7 +107,7 @@ export default function SettingsModal({ onClose }: Props) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="text-xs text-muted mb-1 block">{label}</label>
+      <label className="text-xs text-muted mb-1.5 block">{label}</label>
       {children}
     </div>
   )

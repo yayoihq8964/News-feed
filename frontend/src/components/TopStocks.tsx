@@ -23,7 +23,7 @@ export default function TopStocks({ analyses }: Props) {
   const maxAbs = Math.max(...top.map(s => Math.abs(s.avg)), 1)
 
   return (
-    <div className="rounded-[1.25rem] border panel p-4 bio-lift">
+    <div className="rounded-[2rem] panel p-6 bio-card">
       <h3 className="text-xs font-semibold text-muted-more uppercase tracking-wide mb-3">热门影响股票</h3>
       <div className="space-y-2">
         {top.map(s => (
@@ -40,7 +40,7 @@ export default function TopStocks({ analyses }: Props) {
                 </div><div className="w-1/2" /></>
               )}
             </div>
-            <span className={`font-mono text-[10px] font-semibold w-8 text-right ${s.avg >= 0 ? 'text-leaf-500 dark:text-leaf-400' : 'text-coral-500 dark:text-coral-400'}`}>
+            <span className={`font-mono text-[10px] font-semibold w-8 text-right ${s.avg >= 0 ? 'text-leaf-600 dark:text-leaf-400' : 'text-coral-500 dark:text-coral-400'}`}>
               {s.avg > 0 ? '+' : ''}{s.avg}
             </span>
           </div>
