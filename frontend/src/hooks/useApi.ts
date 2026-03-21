@@ -52,7 +52,9 @@ export function useApi<T>(
       })
       .catch(err => {
         if (!cancelled) {
-          setData(null);
+          // Only clear data on deps change (route navigation);
+          // on refetch/poll failure, keep showing previous data
+          if (depsChanged) setData(null);
           setError(err instanceof Error ? err.message : String(err));
           setLoading(false);
         }
