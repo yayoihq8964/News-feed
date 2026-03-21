@@ -23,19 +23,45 @@ export default function SentimentDashboard() {
   const quotes = quotesApi.data?.quotes ?? []
   const events = calendarApi.data?.events?.slice(0, 5) ?? []
 
-  // Build sector breakdown from stats
-  const sectors = stats?.sector_breakdown
-    ? Object.entries(stats.sector_breakdown).map(([name, count]) => ({
-        name,
-        count,
-        score: Math.round(((stats.bullish_count - stats.bearish_count) / Math.max(stats.total_analyzed, 1)) * 100),
-      }))
-    : [
-        { name: 'Technology', count: 0, score: 0 },
-        { name: 'Finance', count: 0, score: 0 },
-        { name: 'Energy', count: 0, score: 0 },
-        { name: 'Healthcare', count: 0, score: 0 },
-      ]
+  // Merge fine-grained sectors into major categories
+  const SECTOR_MAP: Record<string, string> = {
+    '半导体': 'Technology', '科技硬件': 'Technology', '大型科技股': 'Technology', '人工智能': 'Technology',
+    '软件': 'Technology', '消费电子': 'Technology', '存储芯片': 'Technology', '芯片设计': 'Technology',
+    '互联网内容与社交媒体': 'Technology', '广告技术': 'Technology', '中国互联网与科技硬件': 'Technology',
+    '网络安全': 'Technology', '信息技术': 'Technology',
+    '能源': 'Energy', '可再生能源': 'Energy', '油气上游': 'Energy', '油服': 'Energy',
+    '化工': 'Energy', '贵金属': 'Commodities',
+    '金融服务': 'Finance', '支付服务': 'Finance', '保险': 'Finance',
+    '新能源汽车': 'Auto & EV', '自动驾驶': 'Auto & EV', '自动驾驶技术': 'Auto & EV',
+    '汽车制造': 'Auto & EV', '出行平台': 'Auto & EV', '车联网与智能汽车': 'Auto & EV',
+    '航空': 'Transport', '运输': 'Transport', '物流运输': 'Transport', '物流与包裹递送': 'Transport',
+    '防务': 'Defense', '大盘指数': 'Indices', '宽基指数ETF': 'Indices', '美股大盘股': 'Indices',
+    '电子商务': 'Consumer', '在线零售': 'Consumer', '必需消费品': 'Consumer',
+    '餐饮': 'Consumer', '消费服务': 'Consumer', '公用事业': 'Utilities', '公用事业板块': 'Utilities',
+    '公用事业/基建': 'Utilities', '包装材料': 'Industrial', '大型价值股': 'Value',
+  }
+
+  const sectorSentiment = stats?.sector_sentiment ?? {}
+  const merged: Record<string, { count: number; totalSent: number; bullish: number; bearish: number; neutral: number }> = {}
+
+  for (const [rawSector, data] of Object.entries(sectorSentiment)) {
+    const major = SECTOR_MAP[rawSector] || 'Other'
+    if (!merged[major]) merged[major] = { count: 0, totalSent: 0, bullish: 0, bearish: 0, neutral: 0 }
+    merged[major].count += data.count
+    merged[major].totalSent += data.avg_sentiment * data.count
+    merged[major].bullish += data.bullish
+    merged[major].bearish += data.bearish
+    merged[major].neutral += data.neutral
+  }
+
+  const sectors = Object.entries(merged)
+    .map(([name, d]) => ({
+      name,
+      count: d.count,
+      score: Math.round(d.totalSent / Math.max(d.count, 1)),
+    }))
+    .filter(s => s.count > 0)
+    .sort((a, b) => b.count - a.count)
 
   // Narratives from X sentiment or fallback
   const narratives = xData?.key_narratives ?? []

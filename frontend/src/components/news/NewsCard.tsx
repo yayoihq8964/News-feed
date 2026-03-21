@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import type { NewsItem } from '../../types'
 import NewsImage from './NewsImage'
 import SentimentChip from '../common/SentimentChip'
@@ -17,10 +16,25 @@ function timeAgo(dateStr: string): string {
   return `${Math.floor(diff / 86400)} days ago`
 }
 
+// Filter out generic publisher logos that aren't real article images
+const GENERIC_IMAGE_PATTERNS = [
+  'yahoo_finance_en-US',
+  'whirlpooldata/image/upload',
+  'logo',
+  'favicon',
+  'default_image',
+]
+
+function isRealImage(url: string | null | undefined): boolean {
+  if (!url) return false
+  return !GENERIC_IMAGE_PATTERNS.some(p => url.toLowerCase().includes(p.toLowerCase()))
+}
+
 export default function NewsCard({ item }: NewsCardProps) {
   const analysis = item.analysis
   const classification = analysis?.classification
-  const imageUrl = item.image_url || (item as any).urlToImage
+  const rawImageUrl = item.image_url || (item as any).urlToImage
+  const imageUrl = isRealImage(rawImageUrl) ? rawImageUrl : null
 
   return (
     <article className="group bg-surface-container-lowest dark:bg-slate-800 rounded-xl p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/5 dark:hover:shadow-violet-900/10 border-l-4 border-primary dark:border-violet-500">
@@ -40,7 +54,7 @@ export default function NewsCard({ item }: NewsCardProps) {
           </div>
 
           {/* Title */}
-          <h2 className="text-xl font-bold font-headline leading-tight group-hover:text-primary dark:group-hover:text-violet-400 transition-colors dark:text-slate-100">
+          <h2 className="text-xl font-bold font-headline leading-tight dark:text-slate-100">
             {item.title}
           </h2>
 
@@ -74,22 +88,29 @@ export default function NewsCard({ item }: NewsCardProps) {
                 className="flex items-center gap-1.5 bg-surface-container-high dark:bg-slate-700 text-on-surface-variant dark:text-slate-300 px-3 py-1.5 rounded-lg text-xs font-bold"
               >
                 <span className="material-symbols-outlined text-[14px]">token</span>
-                {sector.toUpperCase()}
+                {sector}
               </div>
             ))}
           </div>
 
-          {/* Analysis excerpt */}
+          {/* Analysis excerpt (Chinese translation) */}
           {analysis?.headline_summary && (
             <p className="text-xs text-on-surface-variant dark:text-slate-500 italic border-l-2 border-primary/20 pl-3">
               {analysis.headline_summary}
             </p>
           )}
+
+          {/* Chinese title translation */}
+          {analysis?.title_zh && analysis.title_zh !== item.title && (
+            <p className="text-xs text-on-surface-variant dark:text-slate-500 border-l-2 border-violet-300/30 dark:border-violet-600/30 pl-3">
+              📰 {analysis.title_zh}
+            </p>
+          )}
         </div>
 
-        {/* Image */}
-        <div className="w-full md:w-48 flex-shrink-0">
-          <Link to={`/analysis/${item.id}`}>
+        {/* Image - only show real article images */}
+        {imageUrl && (
+          <div className="w-full md:w-48 flex-shrink-0">
             <div className="w-full h-32 rounded-xl overflow-hidden">
               <NewsImage
                 src={imageUrl}
@@ -97,13 +118,13 @@ export default function NewsCard({ item }: NewsCardProps) {
                 className="w-full h-full"
               />
             </div>
-          </Link>
-        </div>
+          </div>
+        )}
       </div>
 
-      {/* Footer */}
-      <div className="mt-4 pt-4 border-t border-slate-100/50 dark:border-slate-700/50 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      {/* Footer - status only, no Deep Dive */}
+      {(item.analysis_status === 'pending' || item.analysis_status === 'processing') && (
+        <div className="mt-4 pt-4 border-t border-slate-100/50 dark:border-slate-700/50">
           {item.analysis_status === 'pending' && (
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
               Pending analysis
@@ -116,16 +137,7 @@ export default function NewsCard({ item }: NewsCardProps) {
             </span>
           )}
         </div>
-        <Link
-          to={`/analysis/${item.id}`}
-          className="flex items-center gap-1 text-primary dark:text-violet-400 text-xs font-bold group/btn hover:gap-2 transition-all"
-        >
-          Deep Dive
-          <span className="material-symbols-outlined text-sm group-hover/btn:translate-x-1 transition-transform">
-            arrow_forward
-          </span>
-        </Link>
-      </div>
+      )}
     </article>
   )
 }

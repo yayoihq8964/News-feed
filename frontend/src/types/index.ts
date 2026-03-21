@@ -128,6 +128,14 @@ export interface TopAffectedStockStat {
   mention_count: number;
 }
 
+export interface SectorSentimentData {
+  count: number;
+  avg_sentiment: number;
+  bullish: number;
+  bearish: number;
+  neutral: number;
+}
+
 export interface AnalysisStats {
   total_analyzed: number;
   avg_sentiment: number;
@@ -136,6 +144,7 @@ export interface AnalysisStats {
   neutral_count: number;
   pending_count?: number;
   sector_breakdown?: Record<string, number>;
+  sector_sentiment?: Record<string, SectorSentimentData>;
   top_affected_stocks?: TopAffectedStockStat[];
 }
 

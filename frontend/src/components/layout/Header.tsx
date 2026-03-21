@@ -53,9 +53,7 @@ export default function Header() {
             <span className="material-symbols-outlined dark:hidden">dark_mode</span>
             <span className="material-symbols-outlined hidden dark:inline">light_mode</span>
           </button>
-          <button className="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 rounded-lg transition-all duration-300">
-            <span className="material-symbols-outlined">account_circle</span>
-          </button>
+
         </div>
       </div>
       <div className="bg-slate-200/40 dark:bg-slate-800/40 h-px w-full" />

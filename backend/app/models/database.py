@@ -362,15 +362,35 @@ async def get_analysis_stats(db: aiosqlite.Connection) -> dict:
         row = await cur.fetchone()
     stats = row_to_dict(row) if row else {}
 
-    # Sector breakdown
-    async with db.execute("SELECT affected_sectors FROM analyses") as cur:
+    # Sector breakdown with per-sector sentiment
+    async with db.execute("SELECT affected_sectors, overall_sentiment, classification FROM analyses") as cur:
         rows = await cur.fetchall()
 
-    sector_counts: dict[str, int] = {}
+    sector_data: dict[str, dict] = {}
     for r in rows:
         sectors = json.loads(r[0]) if r[0] else []
+        sentiment = r[1] or 0
+        cls = r[2] or "neutral"
         for s in sectors:
-            sector_counts[s] = sector_counts.get(s, 0) + 1
+            if s not in sector_data:
+                sector_data[s] = {"count": 0, "total_sentiment": 0, "bullish": 0, "bearish": 0, "neutral": 0}
+            sector_data[s]["count"] += 1
+            sector_data[s]["total_sentiment"] += sentiment
+            sector_data[s][cls] += 1
+
+    sector_counts: dict[str, int] = {k: v["count"] for k, v in sector_data.items()}
+
+    # Build sector_sentiment with per-sector avg score
+    sector_sentiment = {
+        name: {
+            "count": data["count"],
+            "avg_sentiment": round(data["total_sentiment"] / max(data["count"], 1), 1),
+            "bullish": data["bullish"],
+            "bearish": data["bearish"],
+            "neutral": data["neutral"],
+        }
+        for name, data in sector_data.items()
+    }
 
     # Top stocks
     async with db.execute("SELECT affected_stocks FROM analyses") as cur:
@@ -404,6 +424,7 @@ async def get_analysis_stats(db: aiosqlite.Connection) -> dict:
         "neutral_count": stats.get("neutral", 0) or 0,
         "pending_count": pending_count,
         "sector_breakdown": sector_counts,
+        "sector_sentiment": sector_sentiment,
         "top_affected_stocks": top_stocks,
     }
 

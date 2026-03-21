@@ -45,17 +45,7 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="mt-auto pt-4">
-        <div className="bg-gradient-to-br from-primary to-primary-container p-4 rounded-xl text-white">
-          <p className="text-xs font-black mb-1">PRO PLAN</p>
-          <p className="text-sm mb-4 opacity-90 leading-relaxed">
-            Unlock institutional-grade flow data and analytics.
-          </p>
-          <button className="bg-white text-primary px-4 py-2 rounded-lg text-xs font-bold w-full active:scale-95 transition-transform hover:bg-opacity-90">
-            Upgrade Pro
-          </button>
-        </div>
-      </div>
+
     </aside>
   )
 }
