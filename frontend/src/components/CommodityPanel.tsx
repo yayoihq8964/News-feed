@@ -7,24 +7,17 @@ const ICONS: Record<string, string> = { Gold: '🥇', Silver: '🥈', Platinum: 
 export default function CommodityPanel({ analyses }: Props) {
   const agg = useMemo(() => {
     const map: Record<string, { total: number; count: number }> = {}
-    for (const a of analyses) {
-      for (const c of a.affected_commodities ?? []) {
-        if (!map[c.name]) map[c.name] = { total: 0, count: 0 }
-        map[c.name].total += c.impact_score
-        map[c.name].count += 1
-      }
+    for (const a of analyses) for (const c of a.affected_commodities ?? []) {
+      if (!map[c.name]) map[c.name] = { total: 0, count: 0 }
+      map[c.name].total += c.impact_score; map[c.name].count += 1
     }
-    return Object.entries(map).map(([name, v]) => ({
-      name, avg: Math.round(v.total / v.count), count: v.count,
-    })).sort((a, b) => b.count - a.count).slice(0, 6)
+    return Object.entries(map).map(([name, v]) => ({ name, avg: Math.round(v.total / v.count), count: v.count })).sort((a, b) => b.count - a.count).slice(0, 6)
   }, [analyses])
 
   return (
-    <div className="rounded-[2rem] panel p-6 bio-card">
+    <div className="rounded-2xl panel p-5 hover:shadow-lg transition-shadow duration-300">
       <h3 className="text-xs font-semibold text-muted-more uppercase tracking-wide mb-3">贵金属影响</h3>
-      {agg.length === 0 ? (
-        <p className="text-xs text-muted text-center py-4">暂无数据</p>
-      ) : (
+      {agg.length === 0 ? <p className="text-xs text-muted text-center py-4">暂无数据</p> : (
         <div className="space-y-2.5">
           {agg.map(c => (
             <div key={c.name} className="flex items-center justify-between">
@@ -33,7 +26,7 @@ export default function CommodityPanel({ analyses }: Props) {
                 <span className="text-sm">{c.name}</span>
                 <span className="text-[10px] text-muted-more">({c.count}条)</span>
               </div>
-              <span className={`font-mono text-sm font-bold ${c.avg > 0 ? 'text-leaf-600 dark:text-leaf-400' : c.avg < 0 ? 'text-coral-500 dark:text-coral-400' : 'text-muted'}`}>
+              <span className={`font-mono text-sm font-bold ${c.avg > 0 ? 'text-emerald-500' : c.avg < 0 ? 'text-rose-500' : 'text-muted'}`}>
                 {c.avg > 0 ? '+' : ''}{c.avg}
               </span>
             </div>

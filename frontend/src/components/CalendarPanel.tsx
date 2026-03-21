@@ -2,100 +2,53 @@ import { useState } from 'react'
 import type { CalendarEvent } from '../types'
 import { analyzeCalendar } from '../services/api'
 
-interface Props {
-  events: CalendarEvent[]
-  loading: boolean
-  onEventsUpdate?: (events: CalendarEvent[]) => void
-}
+interface Props { events: CalendarEvent[]; loading: boolean; onEventsUpdate?: (events: CalendarEvent[]) => void }
 
-function fmtEventTime(dateStr: string): string {
-  try {
-    const d = new Date(dateStr)
-    return d.toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
-  } catch { return dateStr }
-}
-
-function isUpcoming(dateStr: string): boolean {
-  try { return new Date(dateStr).getTime() > Date.now() } catch { return false }
-}
-
-function isPast(dateStr: string): boolean {
-  try { return new Date(dateStr).getTime() <= Date.now() } catch { return true }
-}
+function fmtEventTime(d: string): string { try { return new Date(d).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }) } catch { return d } }
+function isUpcoming(d: string): boolean { try { return new Date(d).getTime() > Date.now() } catch { return false } }
+function isPast(d: string): boolean { try { return new Date(d).getTime() <= Date.now() } catch { return true } }
 
 function ImpactBadge({ impact, label }: { impact?: string; label: string }) {
   if (!impact) return null
-  const map: Record<string, { emoji: string; text: string; cls: string }> = {
-    bullish: { emoji: '🟢', text: '利多', cls: 'text-leaf-600 dark:text-leaf-400' },
-    bearish: { emoji: '🔴', text: '利空', cls: 'text-coral-500 dark:text-coral-400' },
-    neutral: { emoji: '⚪', text: '中性', cls: 'text-earth-400' },
+  const m: Record<string, { e: string; t: string; c: string }> = {
+    bullish: { e: '🟢', t: '利多', c: 'text-emerald-500' },
+    bearish: { e: '🔴', t: '利空', c: 'text-rose-500' },
+    neutral: { e: '⚪', t: '中性', c: 'text-slate-400' },
   }
-  const style = map[impact] ?? map.neutral
-  return (
-    <span className={`text-[9px] font-semibold ${style.cls}`}>
-      {label}:{style.emoji}{style.text}
-    </span>
-  )
+  const s = m[impact] ?? m.neutral
+  return <span className={`text-[9px] font-semibold ${s.c}`}>{label}:{s.e}{s.t}</span>
 }
 
 export default function CalendarPanel({ events, loading, onEventsUpdate }: Props) {
   const [analyzing, setAnalyzing] = useState(false)
   const [localEvents, setLocalEvents] = useState<CalendarEvent[] | null>(null)
-
   const displayEvents = localEvents ?? events
   const upcoming = displayEvents.filter(e => isUpcoming(e.date)).slice(0, 6)
   const recent = displayEvents.filter(e => isPast(e.date) && e.actual).reverse().slice(0, 10)
-
   const hasAnalysis = displayEvents.some(e => e.stock_impact)
 
   const handleAnalyze = async () => {
     setAnalyzing(true)
-    try {
-      const result = await analyzeCalendar()
-      setLocalEvents(result.events)
-      onEventsUpdate?.(result.events)
-    } catch (err) {
-      console.error('Calendar analysis failed', err)
-    } finally {
-      setAnalyzing(false)
-    }
+    try { const r = await analyzeCalendar(); setLocalEvents(r.events); onEventsUpdate?.(r.events) }
+    catch (err) { console.error('Calendar analysis failed', err) }
+    finally { setAnalyzing(false) }
   }
 
   return (
-    <div className="rounded-[2rem] panel p-6 bio-card">
+    <div className="rounded-2xl panel p-5 hover:shadow-lg transition-shadow duration-300">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-xs font-semibold text-muted-more uppercase tracking-wide">📅 宏观经济日历</h3>
-        <button
-          onClick={handleAnalyze}
-          disabled={analyzing}
-          className="text-[10px] px-2.5 py-0.5 rounded-full bg-leaf-500/10 text-leaf-600 dark:text-leaf-400 hover:bg-leaf-500/20 disabled:opacity-50 transition-all duration-200"
-        >
+        <button onClick={handleAnalyze} disabled={analyzing}
+          className="text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 disabled:opacity-50 transition-all duration-200">
           {analyzing ? '分析中...' : hasAnalysis ? '重新分析' : 'AI分析'}
         </button>
       </div>
-
-      {loading ? (
-        <p className="text-xs text-muted text-center py-4">加载中...</p>
-      ) : displayEvents.length === 0 ? (
-        <p className="text-xs text-muted text-center py-4">暂无数据</p>
-      ) : (
+      {loading ? <p className="text-xs text-muted text-center py-4">加载中...</p>
+      : displayEvents.length === 0 ? <p className="text-xs text-muted text-center py-4">暂无数据</p>
+      : (
         <div className="space-y-3">
-          {recent.length > 0 && (
-            <div>
-              <p className="text-[10px] text-muted-more uppercase mb-1.5">已公布</p>
-              {recent.map((e, i) => (
-                <EventRow key={`r-${i}`} event={e} variant="past" />
-              ))}
-            </div>
-          )}
-          {upcoming.length > 0 && (
-            <div>
-              <p className="text-[10px] text-muted-more uppercase mb-1.5">即将公布</p>
-              {upcoming.map((e, i) => (
-                <EventRow key={`u-${i}`} event={e} variant="upcoming" />
-              ))}
-            </div>
-          )}
+          {recent.length > 0 && <div><p className="text-[10px] text-muted-more uppercase mb-1.5">已公布</p>{recent.map((e, i) => <EventRow key={`r-${i}`} event={e} variant="past" />)}</div>}
+          {upcoming.length > 0 && <div><p className="text-[10px] text-muted-more uppercase mb-1.5">即将公布</p>{upcoming.map((e, i) => <EventRow key={`u-${i}`} event={e} variant="upcoming" />)}</div>}
         </div>
       )}
     </div>
@@ -103,36 +56,23 @@ export default function CalendarPanel({ events, loading, onEventsUpdate }: Props
 }
 
 function EventRow({ event: e, variant }: { event: CalendarEvent; variant: 'past' | 'upcoming' }) {
-  const impactColor = e.impact === 'High' ? 'text-coral-500 dark:text-coral-400' : 'text-amber-600 dark:text-amber-400'
-  const hasAi = !!e.stock_impact
-
+  const impactColor = e.impact === 'High' ? 'text-rose-500' : 'text-amber-500'
   return (
     <div className="flex items-start gap-2 py-1.5 border-b timeline-border last:border-0">
-      <div className="flex-shrink-0 w-14">
-        <span className="font-mono text-[10px] text-muted-more">{fmtEventTime(e.date)}</span>
-      </div>
+      <div className="flex-shrink-0 w-14"><span className="font-mono text-[10px] text-muted-more">{fmtEventTime(e.date)}</span></div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
           <span className="text-[10px]">{e.country.split(' ')[0]}</span>
           <span className="text-xs leading-snug truncate">{e.title_zh || e.title}</span>
           <span className={`text-[9px] font-semibold ${impactColor}`}>{e.impact_zh}</span>
         </div>
-        {hasAi && (
-          <div className="flex gap-2 mt-0.5 flex-wrap">
-            <ImpactBadge impact={e.stock_impact} label="股" />
-            <ImpactBadge impact={e.commodity_impact} label="商" />
-          </div>
-        )}
+        {!!e.stock_impact && <div className="flex gap-2 mt-0.5 flex-wrap"><ImpactBadge impact={e.stock_impact} label="股" /><ImpactBadge impact={e.commodity_impact} label="商" /></div>}
         <div className="flex gap-3 mt-0.5 flex-wrap">
           {e.forecast && <span className="text-[10px] text-muted-more">预期: <span className="text-muted">{e.forecast}</span></span>}
           {e.previous && <span className="text-[10px] text-muted-more">前值: <span className="text-muted">{e.previous}</span></span>}
-          {variant === 'past' && e.actual && (
-            <span className="text-[10px] text-muted-more">实际: <span className="font-semibold text-leaf-600 dark:text-leaf-400">{e.actual}</span></span>
-          )}
+          {variant === 'past' && e.actual && <span className="text-[10px] text-muted-more">实际: <span className="font-semibold text-indigo-600 dark:text-indigo-400">{e.actual}</span></span>}
         </div>
-        {hasAi && e.explanation && (
-          <p className="text-[10px] text-muted mt-0.5 leading-relaxed">{e.explanation}</p>
-        )}
+        {!!e.stock_impact && e.explanation && <p className="text-[10px] text-muted mt-0.5 leading-relaxed">{e.explanation}</p>}
       </div>
     </div>
   )

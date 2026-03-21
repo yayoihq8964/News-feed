@@ -23,40 +23,30 @@ export default function NewsFeed({ items, loading, filter, onFilterChange }: Pro
 
   return (
     <div>
-      {/* Filter tabs */}
       <div className="flex items-center gap-1.5 mb-4">
         {FILTERS.map(f => (
-          <button
-            key={f.key}
-            onClick={() => onFilterChange(f.key)}
-            className={`text-xs font-medium px-3.5 py-1.5 rounded-full transition-all duration-200 ${
+          <button key={f.key} onClick={() => onFilterChange(f.key)}
+            className={`text-xs font-medium px-3.5 py-1.5 rounded-xl transition-all duration-200 ${
               filter === f.key
-                ? 'bg-leaf-500 text-white shadow-[0_2px_8px_rgba(127,168,80,0.3)]'
-                : 'text-earth-500 dark:text-earth-400 hover:bg-paper-200 dark:hover:bg-moss-700 shadow-sm'
-            }`}
-          >
+                ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-500/20'
+                : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}>
             {f.label}
           </button>
         ))}
         <div className="flex-1" />
         {loading && (
-          <div className="flex items-center gap-1.5 text-xs text-earth-400">
-            <div className="w-3 h-3 border-2 border-paper-300 dark:border-moss-400 border-t-leaf-500 rounded-full animate-spin" />
+          <div className="flex items-center gap-1.5 text-xs text-slate-400">
+            <div className="w-3 h-3 border-2 border-slate-200 dark:border-slate-700 border-t-indigo-500 rounded-full animate-spin" />
             加载中
           </div>
         )}
       </div>
-
-      {/* Timeline */}
       <div className="space-y-0">
         {filtered.length === 0 && !loading && (
-          <div className="text-center py-20 text-earth-400 dark:text-earth-600 text-sm">
-            暂无新闻数据
-          </div>
+          <div className="text-center py-20 text-slate-400 text-sm">暂无新闻数据</div>
         )}
-        {filtered.map(item => (
-          <NewsTimelineItem key={item.id} item={item} />
-        ))}
+        {filtered.map(item => <NewsTimelineItem key={item.id} item={item} />)}
       </div>
     </div>
   )

@@ -24,51 +24,29 @@ export default function App() {
   const calendarApi = useApi(() => getCalendar().then(r => r.events), [])
 
   const refetchAll = useCallback(() => {
-    newsApi.refetch()
-    statsApi.refetch()
-    xApi.refetch()
-    analysesApi.refetch()
+    newsApi.refetch(); statsApi.refetch(); xApi.refetch(); analysesApi.refetch()
   }, [newsApi, statsApi, xApi, analysesApi])
 
   usePolling(refetchAll, 30000, true)
 
-  const handleFetch = async () => {
-    await fetchNews()
-    setTimeout(refetchAll, 2000)
-  }
-  const handleAnalyze = async () => {
-    await triggerAnalysis()
-    setTimeout(refetchAll, 3000)
-  }
+  const handleFetch = async () => { await fetchNews(); setTimeout(refetchAll, 2000) }
+  const handleAnalyze = async () => { await triggerAnalysis(); setTimeout(refetchAll, 3000) }
   const handleRefreshX = async () => {
-    try {
-      await refreshXSentiment()
-      setTimeout(() => xApi.refetch(), 5000)
-      setTimeout(() => xApi.refetch(), 15000)
-      setTimeout(() => xApi.refetch(), 30000)
-    } catch {}
+    try { await refreshXSentiment(); setTimeout(() => xApi.refetch(), 5000); setTimeout(() => xApi.refetch(), 15000) } catch {}
   }
 
   const analyses = analysesApi.data ?? []
   const news = newsApi.data?.items ?? []
 
   return (
-    <div className="min-h-screen page-bg relative">
-      {/* Paper / leaf-vein noise overlay */}
-      <div className="noise-overlay" />
-
-      <Header
-        stats={statsApi.data}
-        onFetch={handleFetch}
-        onAnalyze={handleAnalyze}
-        onSettings={() => setShowSettings(true)}
-      />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-12 relative z-10">
+    <div className="min-h-screen page-bg">
+      <Header stats={statsApi.data} onFetch={handleFetch} onAnalyze={handleAnalyze} onSettings={() => setShowSettings(true)} />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-5 pb-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-8">
             <NewsFeed items={news} loading={newsApi.loading} filter={filter} onFilterChange={setFilter} />
           </div>
-          <div className="lg:col-span-4 space-y-4">
+          <div className="lg:col-span-4 space-y-5">
             <MarketClock />
             <MarketSentiment stats={statsApi.data} />
             <CommodityPanel analyses={analyses} />
