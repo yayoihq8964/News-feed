@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 export interface UseApiState<T> {
   data: T | null;
@@ -16,12 +16,30 @@ export function useApi<T>(
   const [error, setError] = useState<string | null>(null);
   const [revision, setRevision] = useState(0);
 
-  const refetch = useCallback(() => setRevision(r => r + 1), []);
+  // Track whether this trigger is a deps change vs a refetch/poll
+  const prevDepsRef = useRef<unknown[]>(deps);
+  const isRefetchRef = useRef(false);
+
+  const refetch = useCallback(() => {
+    isRefetchRef.current = true;
+    setRevision(r => r + 1);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
-    // Reset stale state when deps change
-    setData(null);
+
+    // Deps actually changed (not just a refetch) → clear stale data
+    const depsChanged = deps.some((d, i) => d !== prevDepsRef.current[i])
+      || deps.length !== prevDepsRef.current.length;
+    prevDepsRef.current = deps;
+
+    if (depsChanged) {
+      // Route/param change: wipe old data so we don't show stale content
+      setData(null);
+    }
+    // refetch/poll: keep existing data visible while loading
+
+    isRefetchRef.current = false;
     setLoading(true);
     setError(null);
 
