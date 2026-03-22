@@ -272,31 +272,38 @@ export default function Markets() {
             )}
           </div>
 
-          {/* Quick Commodity Prices */}
+          {/* Commodity Impact */}
           {commodities.length > 0 && (
-            <div className="space-y-4">
-              <h3 className="text-xs font-black font-headline tracking-widest uppercase text-on-surface-variant dark:text-slate-400">
-                大宗商品
+            <div className="bg-surface-container-lowest dark:bg-slate-800 p-5 rounded-2xl space-y-4">
+              <h3 className="text-xs font-black font-headline tracking-[0.2em] uppercase text-on-surface-variant dark:text-slate-400">
+                Commodity Impact
               </h3>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {commodities.map(q => {
                   const price = q.price ?? q.previousClose ?? 0
                   const pct = q.changePercent ?? 0
                   const isPos = pct > 0
                   const isNeg = pct < 0
+                  const pairMap: Record<string, string> = { 'GC=F': 'XAU/USD', 'SI=F': 'XAG/USD', 'CL=F': 'WTI/USD' }
+                  const iconColorMap: Record<string, string> = { 'GC=F': 'bg-amber-400 text-white', 'SI=F': 'bg-slate-400 text-white', 'CL=F': 'bg-violet-500 text-white' }
+                  const pair = pairMap[q.symbol] ?? q.symbol
+                  const iconColor = iconColorMap[q.symbol] ?? 'bg-slate-400 text-white'
                   return (
-                    <div key={q.symbol} className="flex items-center gap-3 p-3 bg-surface-container-lowest dark:bg-slate-800 rounded-xl">
-                      <span className="material-symbols-outlined text-amber-500">
-                        {q.name.includes('Gold') ? 'diamond' : q.name.includes('Oil') ? 'oil_barrel' : 'toll'}
-                      </span>
-                      <div className="flex-1">
-                        <p className="text-sm font-bold dark:text-white">{q.label}</p>
+                    <div key={q.symbol} className="flex items-center gap-3 p-3.5 bg-surface-container dark:bg-slate-700/50 rounded-xl">
+                      <div className={`w-9 h-9 rounded-full ${iconColor} flex items-center justify-center flex-shrink-0`}>
+                        <span className="material-symbols-outlined text-lg">
+                          {q.name.includes('Gold') ? 'star' : q.name.includes('Oil') ? 'local_gas_station' : 'hexagon'}
+                        </span>
                       </div>
-                      <div className="text-right">
-                        <p className={`text-xs font-bold ${isPos ? 'text-tertiary dark:text-emerald-400' : isNeg ? 'text-error dark:text-red-400' : 'text-slate-400'}`}>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold dark:text-white">{q.name}</p>
+                        <p className="text-[10px] text-on-surface-variant dark:text-slate-500 font-medium">{pair}</p>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className={`text-sm font-bold ${isPos ? 'text-emerald-600 dark:text-emerald-400' : isNeg ? 'text-red-600 dark:text-red-400' : 'text-slate-400'}`}>
                           {isPos ? '+' : ''}{pct.toFixed(2)}%
                         </p>
-                        <p className="text-[10px] text-on-surface-variant dark:text-slate-400">
+                        <p className="text-xs text-on-surface-variant dark:text-slate-400 font-medium">
                           {price > 0 ? price.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '—'}
                         </p>
                       </div>
