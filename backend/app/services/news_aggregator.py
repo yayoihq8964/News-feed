@@ -45,7 +45,7 @@ async def aggregate_all_news() -> int:
 
         logger.info(f"Aggregated {len(all_items)} raw news items from all sources")
 
-        now = datetime.utcnow().isoformat()
+        now = datetime.utcnow().isoformat() + "Z"
         inserted = 0
 
         for item in all_items:

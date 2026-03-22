@@ -6,6 +6,7 @@ import LoadingSpinner from '../common/LoadingSpinner'
 import SentimentChip from '../common/SentimentChip'
 import NewsImage from '../news/NewsImage'
 import { useState } from 'react'
+import { parseUtcDate } from '../../utils/time'
 
 export default function DeepAnalysis() {
   const { id } = useParams<{ id: string }>()
@@ -89,7 +90,7 @@ export default function DeepAnalysis() {
               Run Analysis
             </button>
             <Link
-              to="/"
+              to="/news"
               className="px-6 py-3 rounded-xl font-bold text-sm border border-surface-container dark:border-slate-700 text-on-surface-variant dark:text-slate-400 hover:bg-surface-container dark:hover:bg-slate-800 transition-all"
             >
               Back to News
@@ -122,7 +123,7 @@ export default function DeepAnalysis() {
       <main className="flex-1 min-w-0 xl:mr-80 p-4 md:p-6 lg:p-8 space-y-8 w-full">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-xs text-on-surface-variant dark:text-slate-500">
-          <Link to="/" className="hover:text-primary dark:hover:text-violet-400 transition-colors">新闻</Link>
+          <Link to="/news" className="hover:text-primary dark:hover:text-violet-400 transition-colors">新闻</Link>
           <span className="material-symbols-outlined text-[14px]">chevron_right</span>
           <span className="text-on-surface dark:text-slate-300">深度分析</span>
         </div>
@@ -132,7 +133,7 @@ export default function DeepAnalysis() {
           <div className="flex flex-wrap items-center gap-3">
             <SentimentChip classification={classification} score={selectedAnalysis.overall_sentiment} />
             <span className="text-xs font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-wider">
-              分析时间: {selectedAnalysis.analyzed_at ? new Date(selectedAnalysis.analyzed_at.endsWith('Z') ? selectedAnalysis.analyzed_at : selectedAnalysis.analyzed_at + 'Z').toLocaleString('zh-CN') : ''}
+              分析时间: {selectedAnalysis.analyzed_at ? parseUtcDate(selectedAnalysis.analyzed_at).toLocaleString('zh-CN') : ''}
             </span>
             {selectedAnalysis.llm_provider && (
               <span className="text-[10px] font-bold text-on-surface-variant dark:text-slate-500 bg-surface-container dark:bg-slate-800 px-2 py-1 rounded-full uppercase">
@@ -430,7 +431,7 @@ export default function DeepAnalysis() {
               <p className="text-xs text-primary dark:text-violet-400 text-center animate-pulse">{triggerMsg}</p>
             )}
             <Link
-              to="/"
+              to="/news"
               className="block w-full py-3 border border-surface-container dark:border-slate-700 text-on-surface-variant dark:text-slate-400 rounded-xl text-xs font-bold text-center hover:bg-surface-container dark:hover:bg-slate-800 transition-all"
             >
               Back to News Feed

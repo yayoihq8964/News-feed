@@ -6,6 +6,7 @@ import FearGreedGauge from '../sentiment/FearGreedGauge'
 import LoadingSpinner from '../common/LoadingSpinner'
 import { useCallback } from 'react'
 import { Link } from 'react-router-dom'
+import { toLocalTime } from '../../utils/time'
 
 export default function Markets() {
   const quotesApi = useApi<{ quotes: MarketQuote[] }>(() => getMarketQuotes(), [])
@@ -112,7 +113,7 @@ export default function Markets() {
                   <div className="flex items-center gap-3 text-xs font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-widest">
                     <span className="text-primary dark:text-violet-400">{featured.source}</span>
                     <span className="w-1 h-1 bg-outline-variant rounded-full" />
-                    <span>{new Date(featured.published_at).toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                    <span>{toLocalTime(featured.published_at)}</span>
                   </div>
                   <h3 className="text-xl font-bold font-headline leading-tight dark:text-white">
                     {analysis?.title_zh || featured.title}
@@ -164,7 +165,7 @@ export default function Markets() {
                       {analysis?.headline_summary || item.summary}
                     </p>
                     <span className="text-[10px] text-on-surface-variant dark:text-slate-500">
-                      {item.source} · {new Date(item.published_at).toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      {item.source} · {toLocalTime(item.published_at)}
                     </span>
                   </Link>
                 )

@@ -20,7 +20,7 @@ def _parse_item(item: dict) -> Optional[dict]:
     published_at = None
     if published_ts:
         try:
-            published_at = datetime.utcfromtimestamp(int(published_ts)).isoformat()
+            published_at = datetime.utcfromtimestamp(int(published_ts)).isoformat() + "Z"
         except (ValueError, OSError):
             published_at = None
 

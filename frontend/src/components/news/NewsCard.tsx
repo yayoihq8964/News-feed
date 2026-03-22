@@ -1,30 +1,10 @@
 import type { NewsItem } from '../../types'
 import NewsImage from './NewsImage'
 import SentimentChip from '../common/SentimentChip'
+import { timeAgo } from '../../utils/time'
 
 interface NewsCardProps {
   item: NewsItem
-}
-
-function timeAgo(dateStr: string): string {
-  // Ensure UTC parsing if no timezone suffix
-  const normalized = dateStr.endsWith('Z') || dateStr.includes('+') || dateStr.includes('T') ? dateStr : dateStr + 'Z'
-  const date = new Date(normalized)
-  const now = new Date()
-  const diff = Math.floor((now.getTime() - date.getTime()) / 1000)
-  if (diff < 0) return '刚刚'
-  if (diff < 60) return '刚刚'
-  if (diff < 3600) return `${Math.floor(diff / 60)} 分钟前`
-  if (diff < 86400) return `${Math.floor(diff / 3600)} 小时前`
-  if (diff < 172800) return '昨天'
-  return `${Math.floor(diff / 86400)} 天前`
-}
-
-function toLocalTime(dateStr: string): string {
-  const normalized = dateStr.endsWith('Z') || dateStr.includes('+') || dateStr.includes('T') ? dateStr : dateStr + 'Z'
-  return new Date(normalized).toLocaleString('zh-CN', {
-    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-  })
 }
 
 const GENERIC_IMAGE_PATTERNS = [

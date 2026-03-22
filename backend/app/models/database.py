@@ -82,21 +82,20 @@ async def init_db() -> None:
         await db.execute(CREATE_ANALYSES)
         await db.execute(CREATE_X_SENTIMENTS)
         await db.execute(CREATE_SETTINGS)
-        # Migrate existing tables: add analysis status columns if missing
-        for col, definition in [
-            ("analysis_status", "TEXT DEFAULT 'pending'"),
-            ("analysis_attempts", "INTEGER DEFAULT 0"),
-            ("analysis_error", "TEXT DEFAULT ''"),
-        ]:
+        # Centralized migration list: (table, column, definition)
+        migrations = [
+            ("news_items", "analysis_status", "TEXT DEFAULT 'pending'"),
+            ("news_items", "analysis_attempts", "INTEGER DEFAULT 0"),
+            ("news_items", "analysis_error", "TEXT DEFAULT ''"),
+            ("analyses", "title_zh", "TEXT DEFAULT ''"),
+            ("analyses", "headline_summary", "TEXT DEFAULT ''"),
+            ("x_sentiments", "fear_greed_estimate", "INTEGER DEFAULT 50"),
+        ]
+        for table, col, definition in migrations:
             try:
-                await db.execute(f"ALTER TABLE news_items ADD COLUMN {col} {definition}")
+                await db.execute(f"ALTER TABLE {table} ADD COLUMN {col} {definition}")
             except Exception:
                 pass  # Column already exists
-        # Migration: add title_zh to analyses
-        try:
-            await db.execute("ALTER TABLE analyses ADD COLUMN title_zh TEXT DEFAULT ''")
-        except Exception:
-            pass  # Column already exists
         await db.commit()
     logger.info("Database tables initialized successfully")
 

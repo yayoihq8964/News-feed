@@ -95,7 +95,8 @@ npm run dev
 
 | Route | Page | Description |
 |-------|------|-------------|
-| `/` | News Feed | Main news timeline with images & sentiment |
+| `/` | Markets | Market overview with indices, commodities & top news |
+| `/news` | News Feed | Main news timeline with images & sentiment |
 | `/sentiment` | Sentiment Dashboard | Fear/Greed index, sector breakdown |
 | `/analysis/:id?` | Deep Analysis | AI-powered news deep dive |
 

@@ -6,6 +6,7 @@ import type { AnalysisStats, XSentiment, CalendarEvent, Analysis, NewsItem } fro
 import FearGreedGauge from './FearGreedGauge'
 import LoadingSpinner from '../common/LoadingSpinner'
 import { Link } from 'react-router-dom'
+import { toLocalTime } from '../../utils/time'
 
 export default function SentimentDashboard() {
   const statsApi = useApi<AnalysisStats>(() => getAnalysisStats(), [])
@@ -213,7 +214,7 @@ export default function SentimentDashboard() {
                         {item.analysis?.title_zh || item.title}
                       </h4>
                       <p className="text-[10px] text-on-surface-variant dark:text-slate-500 font-medium">
-                        {item.source} · {new Date(item.published_at).toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        {item.source} · {toLocalTime(item.published_at)}
                       </p>
                     </div>
                   </Link>
