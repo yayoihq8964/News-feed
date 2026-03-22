@@ -145,8 +145,8 @@ export default function DeepAnalysis() {
             {selectedAnalysis.headline_summary || matchedNews?.title || '市场分析'}
           </h1>
 
-          {/* News Image */}
-          {matchedNews?.image_url && (
+          {/* News Image — filter out generic publisher logos */}
+          {matchedNews?.image_url && !['yahoo_finance_en-US', 'whirlpooldata', 'logo', 'favicon'].some(p => (matchedNews.image_url || '').toLowerCase().includes(p)) && (
             <div className="w-full h-48 md:h-64 rounded-2xl overflow-hidden">
               <NewsImage
                 src={matchedNews.image_url}
@@ -297,7 +297,7 @@ export default function DeepAnalysis() {
                   >
                     <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
                       <NewsImage
-                        src={aNews?.image_url}
+                        src={aNews?.image_url && !['yahoo_finance_en-US', 'whirlpooldata', 'logo', 'favicon'].some(p => (aNews.image_url || '').toLowerCase().includes(p)) ? aNews.image_url : null}
                         alt={a.headline_summary || ''}
                         className="w-full h-full"
                       />
@@ -332,25 +332,30 @@ export default function DeepAnalysis() {
                 板块影响
               </h3>
               <div className="space-y-3">
-                {affectedSectors.map((sector, i) => (
-                  <div
-                    key={i}
-                    className="bg-surface-container-lowest dark:bg-slate-800 p-4 rounded-xl"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-semibold dark:text-white">{sector}</span>
-                      <span className={`material-symbols-outlined text-sm ${isBullish ? 'text-tertiary dark:text-emerald-400' : isBearish ? 'text-error dark:text-red-400' : 'text-slate-400'}`}>
-                        {isBullish ? 'trending_up' : isBearish ? 'trending_down' : 'trending_flat'}
-                      </span>
+                {affectedSectors.map((sector, i) => {
+                  // Map overall_sentiment (-100..100) to a 0-100% bar
+                  const sent = selectedAnalysis.overall_sentiment ?? 0
+                  const barPct = Math.min(100, Math.max(5, Math.round((sent + 100) / 2)))
+                  return (
+                    <div
+                      key={i}
+                      className="bg-surface-container-lowest dark:bg-slate-800 p-4 rounded-xl"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-semibold dark:text-white">{sector}</span>
+                        <span className={`text-xs font-bold ${isBullish ? 'text-tertiary dark:text-emerald-400' : isBearish ? 'text-error dark:text-red-400' : 'text-slate-400'}`}>
+                          {sent > 0 ? '+' : ''}{sent}
+                        </span>
+                      </div>
+                      <div className="h-1.5 bg-surface-container dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${isBullish ? 'bg-tertiary dark:bg-emerald-500' : isBearish ? 'bg-error dark:bg-red-500' : 'bg-slate-400'}`}
+                          style={{ width: `${barPct}%` }}
+                        />
+                      </div>
                     </div>
-                    <div className="h-1.5 bg-surface-container dark:bg-slate-700 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${isBullish ? 'bg-tertiary dark:bg-emerald-500' : isBearish ? 'bg-error dark:bg-red-500' : 'bg-slate-400'}`}
-                        style={{ width: `${50 + (selectedAnalysis.overall_sentiment ?? 0) * 5}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )}

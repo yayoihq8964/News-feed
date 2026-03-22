@@ -38,7 +38,8 @@ export default function MarketSidebar({ stats }: MarketSidebarProps) {
               trendingQuotes.map((quote) => {
                 const pct = quote.changePercent ?? 0
                 const isPos = pct >= 0
-                const price = quote.price ?? 0
+                const price = quote.price ?? quote.previousClose ?? 0
+                const isClosed = pct === 0 && quote.change === 0
                 // Simulate 52-week range: ±30% from current price
                 const low52 = price * 0.7
                 const high52 = price * 1.15
@@ -52,15 +53,19 @@ export default function MarketSidebar({ stats }: MarketSidebarProps) {
                         <p className="text-[10px] text-on-surface-variant dark:text-slate-500">{quote.name || quote.label}</p>
                       </div>
                       <div className="text-right">
-                        <span className={`font-bold text-sm ${isPos ? 'text-tertiary dark:text-emerald-400' : 'text-error dark:text-red-400'}`}>
-                          {isPos ? '+' : ''}{pct.toFixed(2)}%
-                        </span>
-                        <p className="text-xs font-semibold dark:text-slate-300">
+                        {isClosed ? (
+                          <span className="text-[10px] font-bold text-on-surface-variant dark:text-slate-500 bg-surface-container dark:bg-slate-700 px-2 py-0.5 rounded-full">已收盘</span>
+                        ) : (
+                          <span className={`font-bold text-sm ${isPos ? 'text-tertiary dark:text-emerald-400' : 'text-error dark:text-red-400'}`}>
+                            {isPos ? '+' : ''}{pct.toFixed(2)}%
+                          </span>
+                        )}
+                        <p className="text-xs font-semibold dark:text-slate-300 mt-0.5">
                           {price > 0 ? price.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '—'}
                         </p>
                       </div>
                     </div>
-                    {/* 52-week price range bar */}
+                    {/* 52周价格范围 */}
                     <div className="space-y-1">
                       <div className="flex justify-between text-[9px] text-on-surface-variant dark:text-slate-500">
                         <span>{low52.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
@@ -69,8 +74,8 @@ export default function MarketSidebar({ stats }: MarketSidebarProps) {
                       </div>
                       <div className="relative w-full h-1.5 bg-surface-container dark:bg-slate-700 rounded-full">
                         <div
-                          className={`absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full border-2 border-white dark:border-slate-800 shadow-sm ${isPos ? 'bg-tertiary dark:bg-emerald-500' : 'bg-error dark:bg-red-500'}`}
-                          style={{ left: `calc(${Math.min(Math.max(position, 2), 98)}% - 4px)` }}
+                          className={`absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-slate-800 shadow-sm ${isClosed ? 'bg-slate-400' : isPos ? 'bg-tertiary dark:bg-emerald-500' : 'bg-error dark:bg-red-500'}`}
+                          style={{ left: `calc(${Math.min(Math.max(position, 3), 97)}% - 5px)` }}
                         />
                       </div>
                     </div>
