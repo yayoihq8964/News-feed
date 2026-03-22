@@ -1,7 +1,8 @@
 import { Link, useLocation } from 'react-router-dom'
 
 const items = [
-  { icon: 'newspaper', label: '新闻', path: '/' },
+  { icon: 'show_chart', label: '市场', path: '/' },
+  { icon: 'newspaper', label: '新闻', path: '/news' },
   { icon: 'monitoring', label: '情绪', path: '/sentiment' },
   { icon: 'auto_awesome', label: '分析', path: '/analysis' },
 ]

@@ -1,7 +1,8 @@
 import { Link, useLocation } from 'react-router-dom'
 
 const navItems = [
-  { icon: 'newspaper', label: '新闻流', path: '/' },
+  { icon: 'show_chart', label: '市场总览', path: '/' },
+  { icon: 'newspaper', label: '新闻流', path: '/news' },
   { icon: 'psychology', label: '市场情绪', path: '/sentiment' },
   { icon: 'auto_awesome', label: '深度分析', path: '/analysis' },
 ]
@@ -20,7 +21,7 @@ export default function Sidebar() {
         <h2 className="text-lg font-black text-violet-700 dark:text-violet-400 font-headline">
           宏观洞察
         </h2>
-        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 tracking-widest">
           智能分析引擎
         </p>
       </div>

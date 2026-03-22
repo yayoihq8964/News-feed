@@ -19,16 +19,6 @@ export default function Header() {
           </Link>
           <nav className="hidden md:flex gap-6 items-center">
             <Link
-              to="/analysis"
-              className={`font-headline font-semibold tracking-tight transition-colors ${
-                isActive('/analysis')
-                  ? 'text-violet-700 dark:text-violet-400 font-bold border-b-2 border-violet-700 dark:border-violet-400 pb-1'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-            >
-              分析
-            </Link>
-            <Link
               to="/"
               className={`font-headline font-semibold tracking-tight transition-colors ${
                 isActive('/')
@@ -36,7 +26,17 @@ export default function Header() {
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
               }`}
             >
-              获取新闻
+              市场
+            </Link>
+            <Link
+              to="/news"
+              className={`font-headline font-semibold tracking-tight transition-colors ${
+                location.pathname === '/news'
+                  ? 'text-violet-700 dark:text-violet-400 font-bold border-b-2 border-violet-700 dark:border-violet-400 pb-1'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+              }`}
+            >
+              新闻
             </Link>
           </nav>
         </div>
