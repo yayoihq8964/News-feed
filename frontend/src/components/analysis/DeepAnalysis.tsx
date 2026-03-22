@@ -7,6 +7,7 @@ import SentimentChip from '../common/SentimentChip'
 import NewsImage from '../news/NewsImage'
 import { useState } from 'react'
 import { parseUtcDate } from '../../utils/time'
+import { getRealImageUrl } from '../../utils/image'
 
 export default function DeepAnalysis() {
   const { id } = useParams<{ id: string }>()
@@ -150,15 +151,18 @@ export default function DeepAnalysis() {
           )}
 
           {/* News Image — filter out generic publisher logos */}
-          {matchedNews?.image_url && !['yahoo_finance_en-US', 'whirlpooldata', 'logo', 'favicon'].some(p => (matchedNews.image_url || '').toLowerCase().includes(p)) && (
-            <div className="w-full h-48 md:h-64 rounded-2xl overflow-hidden">
-              <NewsImage
-                src={matchedNews.image_url}
-                alt={matchedNews.title}
-                className="w-full h-full"
-              />
-            </div>
-          )}
+          {(() => {
+            const heroImg = getRealImageUrl(matchedNews?.image_url)
+            return heroImg ? (
+              <div className="w-full h-48 md:h-64 rounded-2xl overflow-hidden">
+                <NewsImage
+                  src={heroImg}
+                  alt={matchedNews?.title ?? ''}
+                  className="w-full h-full"
+                />
+              </div>
+            ) : null
+          })()}
 
           {/* Summary */}
           <div className="bg-surface-container-lowest dark:bg-slate-900 rounded-2xl p-6 md:p-8">
@@ -301,7 +305,7 @@ export default function DeepAnalysis() {
                   >
                     <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
                       <NewsImage
-                        src={aNews?.image_url && !['yahoo_finance_en-US', 'whirlpooldata', 'logo', 'favicon'].some(p => (aNews.image_url || '').toLowerCase().includes(p)) ? aNews.image_url : null}
+                        src={getRealImageUrl(aNews?.image_url)}
                         alt={a.headline_summary || ''}
                         className="w-full h-full"
                       />
