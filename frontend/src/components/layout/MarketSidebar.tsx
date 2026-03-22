@@ -93,7 +93,7 @@ export default function MarketSidebar({ stats }: MarketSidebarProps) {
           <h3 className="text-xs font-black font-headline text-on-surface dark:text-slate-100">综合情绪</h3>
           <div className="relative pt-6 pb-2">
             <div className="h-2 w-full sentiment-gradient rounded-full" />
-            <div className="absolute top-4 flex flex-col items-center -translate-x-1/2" style={{ left: `${fearGreed}%` }}>
+            <div className="absolute top-[22px] flex flex-col items-center -translate-x-1/2" style={{ left: `${fearGreed}%` }}>
               <div className="w-4 h-4 rounded-full bg-white border-2 border-primary shadow-lg shadow-primary/20" />
               <span className="text-[10px] font-bold mt-1 text-on-surface dark:text-slate-300 whitespace-nowrap">
                 {fearGreed} ({sentimentLabel})
