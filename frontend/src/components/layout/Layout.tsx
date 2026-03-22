@@ -13,7 +13,7 @@ export default function Layout({ children }: LayoutProps) {
       <Header />
       <div className="flex">
         <Sidebar />
-        <div className="flex-1 lg:ml-64 pb-16 lg:pb-0">
+        <div className="flex-1 lg:ml-64 pb-16 lg:pb-0 min-w-0">
           {children}
         </div>
       </div>
