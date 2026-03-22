@@ -1,6 +1,7 @@
+import { useState } from 'react'
 import { useApi } from '../../hooks/useApi'
 import { usePolling } from '../../hooks/usePolling'
-import { getAnalysisStats, getXSentiment, getCalendar, getMarketQuotes, getLatestAnalyses, getNews, type MarketQuote } from '../../services/api'
+import { getAnalysisStats, getXSentiment, getCalendar, getMarketQuotes, getLatestAnalyses, getNews, analyzeCalendar, type MarketQuote } from '../../services/api'
 import type { AnalysisStats, XSentiment, CalendarEvent, Analysis, NewsItem } from '../../types'
 import FearGreedGauge from './FearGreedGauge'
 import LoadingSpinner from '../common/LoadingSpinner'
@@ -14,6 +15,9 @@ export default function SentimentDashboard() {
   const analysesApi = useApi<Analysis[]>(() => getLatestAnalyses(1), [])
   const newsApi = useApi<{ items: NewsItem[]; total: number }>(() => getNews({ page_size: 4 }), [])
 
+  const [calendarExpanded, setCalendarExpanded] = useState(false)
+  const [calendarAnalyzing, setCalendarAnalyzing] = useState(false)
+
   usePolling(() => { statsApi.refetch(); xApi.refetch() }, 60_000)
 
   const stats = statsApi.data
@@ -21,10 +25,20 @@ export default function SentimentDashboard() {
   const quotes = quotesApi.data?.quotes ?? []
   const indices = quotes.filter(q => q.type === 'index')
   const commodities = quotes.filter(q => q.type === 'commodity')
-  const events = calendarApi.data?.events?.slice(0, 3) ?? []
+  const allEvents = calendarApi.data?.events ?? []
+  const events = calendarExpanded ? allEvents : allEvents.slice(0, 3)
   const latestAnalysis = analysesApi.data?.[0]
   const news = newsApi.data?.items ?? []
   const fearGreed = xData?.fear_greed_estimate ?? (stats ? Math.round(50 + (stats.avg_sentiment ?? 0) * 5) : 50)
+
+  const handleAnalyzeCalendar = async () => {
+    setCalendarAnalyzing(true)
+    try {
+      await analyzeCalendar()
+      calendarApi.refetch()
+    } catch { /* ignore */ }
+    setCalendarAnalyzing(false)
+  }
 
   // Parse affected stocks from latest analysis
   const affectedStocks: Array<{ ticker: string; impact_score: number; reason: string }> =
@@ -275,23 +289,45 @@ export default function SentimentDashboard() {
                     <div key={i} className={`relative pl-6 border-l-2 ${isHigh ? 'border-primary/40 dark:border-violet-500/40' : 'border-slate-200 dark:border-slate-700'}`}>
                       <div className={`absolute -left-[5px] top-0 w-2 h-2 rounded-full ${isHigh ? 'bg-primary dark:bg-violet-500' : 'bg-slate-300 dark:bg-slate-600'}`} />
                       <p className={`text-[10px] font-black uppercase mb-1 ${isHigh ? 'text-primary dark:text-violet-400' : 'text-on-surface-variant dark:text-slate-500'}`}>
-                        {ev.date}
+                        {ev.date} · {ev.country}
                       </p>
-                      <p className="text-sm font-bold dark:text-white leading-tight">{ev.title}</p>
+                      <p className="text-sm font-bold dark:text-white leading-tight">{ev.title_zh || ev.title}</p>
                       <p className="text-[10px] text-on-surface-variant dark:text-slate-500 mt-1">
                         影响: <span className={`font-bold ${isHigh ? 'text-error dark:text-red-400' : ev.impact === 'medium' ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400'}`}>
                           {isHigh ? '高' : ev.impact === 'medium' ? '中' : '低'}
                         </span>
                       </p>
+                      {ev.explanation && (
+                        <p className="text-[10px] text-on-surface-variant dark:text-slate-400 mt-1 italic">{ev.explanation}</p>
+                      )}
+                      {ev.stock_impact && (
+                        <span className={`inline-block mt-1 text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                          ev.stock_impact === 'bullish' ? 'bg-tertiary-container/50 text-on-tertiary-container' :
+                          ev.stock_impact === 'bearish' ? 'bg-error-container/50 text-on-error-container' :
+                          'bg-surface-container text-on-surface-variant'
+                        }`}>
+                          {ev.stock_impact === 'bullish' ? '利好股市' : ev.stock_impact === 'bearish' ? '利空股市' : '影响中性'}
+                        </span>
+                      )}
                     </div>
                   )
                 })}
               </div>
-              {events.length > 0 && (
-                <button className="w-full mt-6 py-3 border border-slate-100 dark:border-slate-700 rounded-xl text-xs font-bold text-on-surface-variant dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors uppercase tracking-widest">
-                  完整日程
+              {allEvents.length > 3 && (
+                <button
+                  onClick={() => setCalendarExpanded(!calendarExpanded)}
+                  className="w-full mt-4 py-2.5 border border-slate-100 dark:border-slate-700 rounded-xl text-xs font-bold text-on-surface-variant dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors uppercase tracking-widest"
+                >
+                  {calendarExpanded ? '收起' : `完整日程 (${allEvents.length})`}
                 </button>
               )}
+              <button
+                onClick={handleAnalyzeCalendar}
+                disabled={calendarAnalyzing}
+                className="w-full mt-2 py-2.5 bg-primary/10 dark:bg-violet-500/10 text-primary dark:text-violet-400 rounded-xl text-xs font-bold hover:bg-primary/20 dark:hover:bg-violet-500/20 transition-colors uppercase tracking-widest disabled:opacity-50"
+              >
+                {calendarAnalyzing ? '分析中...' : '🤖 AI 分析日历'}
+              </button>
             </section>
           </div>
         </div>

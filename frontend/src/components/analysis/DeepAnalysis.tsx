@@ -119,7 +119,7 @@ export default function DeepAnalysis() {
   return (
     <div className="flex gap-0">
       {/* Main Content */}
-      <main className="flex-1 min-w-0 xl:mr-80 p-4 md:p-6 lg:p-8 space-y-8 max-w-4xl">
+      <main className="flex-1 min-w-0 xl:mr-80 p-4 md:p-6 lg:p-8 space-y-8 w-full">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-xs text-on-surface-variant dark:text-slate-500">
           <Link to="/" className="hover:text-primary dark:hover:text-violet-400 transition-colors">新闻</Link>
@@ -132,7 +132,7 @@ export default function DeepAnalysis() {
           <div className="flex flex-wrap items-center gap-3">
             <SentimentChip classification={classification} score={selectedAnalysis.overall_sentiment} />
             <span className="text-xs font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-wider">
-              分析时间: {selectedAnalysis.analyzed_at ? new Date(selectedAnalysis.analyzed_at).toLocaleString() : ''}
+              分析时间: {selectedAnalysis.analyzed_at ? new Date(selectedAnalysis.analyzed_at.endsWith('Z') ? selectedAnalysis.analyzed_at : selectedAnalysis.analyzed_at + 'Z').toLocaleString('zh-CN') : ''}
             </span>
             {selectedAnalysis.llm_provider && (
               <span className="text-[10px] font-bold text-on-surface-variant dark:text-slate-500 bg-surface-container dark:bg-slate-800 px-2 py-1 rounded-full uppercase">
@@ -141,7 +141,7 @@ export default function DeepAnalysis() {
             )}
           </div>
 
-          <h1 className="text-2xl md:text-3xl font-extrabold font-headline tracking-tight leading-tight dark:text-white break-words">
+          <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold font-headline tracking-tight leading-tight dark:text-white break-words">
             {selectedAnalysis.title_zh || matchedNews?.title || '市场分析'}
           </h1>
           {matchedNews?.title && selectedAnalysis.title_zh && selectedAnalysis.title_zh !== matchedNews.title && (
