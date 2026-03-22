@@ -119,7 +119,7 @@ export default function DeepAnalysis() {
   return (
     <div className="flex gap-0">
       {/* Main Content */}
-      <main className="flex-1 xl:mr-80 p-4 md:p-6 lg:p-8 space-y-8">
+      <main className="flex-1 min-w-0 xl:mr-80 p-4 md:p-6 lg:p-8 space-y-8 max-w-4xl">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-xs text-on-surface-variant dark:text-slate-500">
           <Link to="/" className="hover:text-primary dark:hover:text-violet-400 transition-colors">新闻</Link>
@@ -141,9 +141,12 @@ export default function DeepAnalysis() {
             )}
           </div>
 
-          <h1 className="text-3xl md:text-4xl font-extrabold font-headline tracking-tight leading-tight dark:text-white">
-            {selectedAnalysis.headline_summary || matchedNews?.title || '市场分析'}
+          <h1 className="text-2xl md:text-3xl font-extrabold font-headline tracking-tight leading-tight dark:text-white break-words">
+            {selectedAnalysis.title_zh || matchedNews?.title || '市场分析'}
           </h1>
+          {matchedNews?.title && selectedAnalysis.title_zh && selectedAnalysis.title_zh !== matchedNews.title && (
+            <p className="text-sm text-on-surface-variant dark:text-slate-400">{matchedNews.title}</p>
+          )}
 
           {/* News Image — filter out generic publisher logos */}
           {matchedNews?.image_url && !['yahoo_finance_en-US', 'whirlpooldata', 'logo', 'favicon'].some(p => (matchedNews.image_url || '').toLowerCase().includes(p)) && (

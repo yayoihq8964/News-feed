@@ -114,6 +114,10 @@ export interface MarketQuote {
   change: number | null
   changePercent: number | null
   previousClose: number | null
+  yearLow: number | null
+  yearHigh: number | null
+  marketOpen: boolean
+  type: 'index' | 'commodity'
 }
 
 export const getMarketQuotes = () =>

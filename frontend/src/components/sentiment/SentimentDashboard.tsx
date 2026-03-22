@@ -294,52 +294,39 @@ export default function SentimentDashboard() {
 
           <div className="space-y-4">
             <h3 className="text-sm font-black font-headline tracking-widest uppercase text-on-surface-variant dark:text-slate-400">大宗商品</h3>
-            {quotes.filter(q => ['Gold', 'Oil', 'Silver'].some(c => (q.name || '').includes(c) || (q.label || '').includes(c))).length > 0 ? (
-              <div className="space-y-3">
-                {quotes
-                  .filter(q => ['Gold', 'Oil', 'Silver', 'Copper'].some(c => (q.name || '').toLowerCase().includes(c.toLowerCase()) || (q.label || '').toLowerCase().includes(c.toLowerCase())))
-                  .slice(0, 4)
-                  .map(q => {
-                    const isPositive = (q.changePercent ?? 0) >= 0
+            {(() => {
+              const commodities = quotes.filter(q => (q as any).type === 'commodity' || ['Gold', 'Oil', 'Silver'].some(c => (q.name || '').includes(c)))
+              return commodities.length > 0 ? (
+                <div className="space-y-3">
+                  {commodities.slice(0, 4).map(q => {
+                    const price = q.price ?? q.previousClose ?? 0
+                    const pct = q.changePercent ?? 0
+                    const isPositive = pct > 0
+                    const isNeg = pct < 0
                     return (
                       <div key={q.symbol} className="flex items-center gap-4 p-4 rounded-xl bg-surface-container-lowest dark:bg-slate-800">
                         <div className="w-10 h-10 rounded-xl bg-surface-container dark:bg-slate-700 flex items-center justify-center">
                           <span className="material-symbols-outlined text-amber-500">
-                            {(q.name || '').toLowerCase().includes('gold') ? 'diamond' : 'oil_barrel'}
+                            {(q.name || '').includes('Gold') ? 'diamond' : (q.name || '').includes('Oil') ? 'oil_barrel' : 'toll'}
                           </span>
                         </div>
                         <div className="flex-1">
-                          <p className="font-bold text-sm dark:text-white">{q.label || q.name}</p>
+                          <p className="font-bold text-sm dark:text-white">{q.label}</p>
                           <p className="text-xs text-on-surface-variant dark:text-slate-400">
-                            {q.price != null ? `$${q.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : '—'}
+                            {price > 0 ? `$${price.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : '—'}
                           </p>
                         </div>
-                        <span className={`text-sm font-bold ${isPositive ? 'text-tertiary dark:text-emerald-400' : 'text-error dark:text-red-400'}`}>
-                          {isPositive ? '+' : ''}{q.changePercent?.toFixed(2) ?? '0.00'}%
+                        <span className={`text-sm font-bold ${isPositive ? 'text-tertiary dark:text-emerald-400' : isNeg ? 'text-error dark:text-red-400' : 'text-slate-400'}`}>
+                          {isPositive ? '+' : ''}{pct.toFixed(2)}%
                         </span>
                       </div>
                     )
                   })}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {[
-                  { name: '原油', icon: 'oil_barrel' },
-                  { name: '黄金 (XAU)', icon: 'diamond' },
-                  { name: '白银 (XAG)', icon: 'toll' },
-                ].map(c => (
-                  <div key={c.name} className="flex items-center gap-4 p-4 rounded-xl bg-surface-container-lowest dark:bg-slate-800">
-                    <div className="w-10 h-10 rounded-xl bg-surface-container dark:bg-slate-700 flex items-center justify-center">
-                      <span className="material-symbols-outlined text-amber-500">{c.icon}</span>
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-bold text-sm dark:text-white">{c.name}</p>
-                      <p className="text-xs text-on-surface-variant dark:text-slate-400">—</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                </div>
+              ) : (
+                <p className="text-sm text-on-surface-variant dark:text-slate-500 italic">加载中...</p>
+              )
+            })()}
           </div>
 
           {xData && xData.meme_stocks.length > 0 && (
