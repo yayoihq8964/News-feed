@@ -120,7 +120,7 @@ export default function DeepAnalysis() {
   return (
     <div className="flex gap-0">
       {/* Main Content */}
-      <main className="flex-1 min-w-0 xl:mr-80 p-4 md:p-6 lg:p-8 space-y-8 w-full">
+      <main className="flex-1 min-w-0 p-4 md:p-6 lg:p-8 space-y-8 overflow-hidden">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-xs text-on-surface-variant dark:text-slate-500">
           <Link to="/news" className="hover:text-primary dark:hover:text-violet-400 transition-colors">新闻</Link>
@@ -327,7 +327,7 @@ export default function DeepAnalysis() {
       </main>
 
       {/* Right Sidebar */}
-      <aside className="hidden xl:block fixed right-0 top-16 w-80 h-[calc(100vh-64px)] p-6 overflow-y-auto custom-scrollbar bg-surface-container-low dark:bg-slate-900/50 border-l border-surface-container dark:border-slate-800">
+      <aside className="hidden xl:block sticky top-16 w-80 shrink-0 h-[calc(100vh-64px)] p-6 overflow-y-auto custom-scrollbar bg-surface-container-low dark:bg-slate-900/50 border-l border-surface-container dark:border-slate-800">
         <div className="space-y-8">
           {/* 板块影响 */}
           {affectedSectors.length > 0 && (
