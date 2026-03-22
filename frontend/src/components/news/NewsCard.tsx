@@ -10,13 +10,12 @@ function timeAgo(dateStr: string): string {
   const date = new Date(dateStr)
   const now = new Date()
   const diff = Math.floor((now.getTime() - date.getTime()) / 1000)
-  if (diff < 60) return 'just now'
-  if (diff < 3600) return `${Math.floor(diff / 60)} minutes ago`
-  if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`
-  return `${Math.floor(diff / 86400)} days ago`
+  if (diff < 60) return '刚刚'
+  if (diff < 3600) return `${Math.floor(diff / 60)} 分钟前`
+  if (diff < 86400) return `${Math.floor(diff / 3600)} 小时前`
+  return `${Math.floor(diff / 86400)} 天前`
 }
 
-// Filter out generic publisher logos that aren't real article images
 const GENERIC_IMAGE_PATTERNS = [
   'yahoo_finance_en-US',
   'whirlpooldata/image/upload',
@@ -37,7 +36,7 @@ export default function NewsCard({ item }: NewsCardProps) {
   const imageUrl = isRealImage(rawImageUrl) ? rawImageUrl : null
 
   return (
-    <article className="group bg-surface-container-lowest dark:bg-slate-800 rounded-xl p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/5 dark:hover:shadow-violet-900/10 border-l-4 border-primary dark:border-violet-500">
+    <article className="group bg-surface-container-lowest dark:bg-slate-800 rounded-2xl p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/5 dark:hover:shadow-violet-900/10 border-l-4 border-primary dark:border-violet-500">
       <div className="flex flex-col md:flex-row gap-6">
         <div className="flex-1 space-y-4 min-w-0">
           {/* Source + Time */}
@@ -48,7 +47,7 @@ export default function NewsCard({ item }: NewsCardProps) {
             {item.analysis_status === 'completed' && (
               <>
                 <span className="w-1 h-1 bg-outline-variant rounded-full" />
-                <span className="text-tertiary dark:text-emerald-400">AI Analyzed</span>
+                <span className="text-tertiary dark:text-emerald-400">AI已分析</span>
               </>
             )}
           </div>
@@ -57,6 +56,13 @@ export default function NewsCard({ item }: NewsCardProps) {
           <h2 className="text-xl font-bold font-headline leading-tight dark:text-slate-100">
             {item.title}
           </h2>
+
+          {/* Chinese title translation */}
+          {analysis?.title_zh && analysis.title_zh !== item.title && (
+            <p className="text-sm text-on-surface-variant dark:text-slate-400 border-l-2 border-violet-300/40 dark:border-violet-600/40 pl-3">
+              {analysis.title_zh}
+            </p>
+          )}
 
           {/* Summary */}
           {item.summary && (
@@ -93,22 +99,15 @@ export default function NewsCard({ item }: NewsCardProps) {
             ))}
           </div>
 
-          {/* Analysis excerpt (Chinese translation) */}
+          {/* Analysis excerpt (Chinese) */}
           {analysis?.headline_summary && (
             <p className="text-xs text-on-surface-variant dark:text-slate-500 italic border-l-2 border-primary/20 pl-3">
               {analysis.headline_summary}
             </p>
           )}
-
-          {/* Chinese title translation */}
-          {analysis?.title_zh && analysis.title_zh !== item.title && (
-            <p className="text-xs text-on-surface-variant dark:text-slate-500 border-l-2 border-violet-300/30 dark:border-violet-600/30 pl-3">
-              📰 {analysis.title_zh}
-            </p>
-          )}
         </div>
 
-        {/* Image - only show real article images */}
+        {/* Image */}
         {imageUrl && (
           <div className="w-full md:w-48 flex-shrink-0">
             <div className="w-full h-32 rounded-xl overflow-hidden">
@@ -122,18 +121,18 @@ export default function NewsCard({ item }: NewsCardProps) {
         )}
       </div>
 
-      {/* Footer - status only, no Deep Dive */}
+      {/* Footer - status only */}
       {(item.analysis_status === 'pending' || item.analysis_status === 'processing') && (
         <div className="mt-4 pt-4 border-t border-slate-100/50 dark:border-slate-700/50">
           {item.analysis_status === 'pending' && (
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-              Pending analysis
+              等待分析
             </span>
           )}
           {item.analysis_status === 'processing' && (
             <span className="flex items-center gap-1 text-[10px] font-bold text-primary uppercase tracking-wider">
               <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
-              Analyzing...
+              分析中...
             </span>
           )}
         </div>

@@ -1,9 +1,9 @@
 import { Link, useLocation } from 'react-router-dom'
 
 const items = [
-  { icon: 'newspaper', label: 'News', path: '/' },
-  { icon: 'monitoring', label: 'Sentiment', path: '/sentiment' },
-  { icon: 'auto_awesome', label: 'Analysis', path: '/analysis' },
+  { icon: 'newspaper', label: '新闻', path: '/' },
+  { icon: 'monitoring', label: '情绪', path: '/sentiment' },
+  { icon: 'auto_awesome', label: '分析', path: '/analysis' },
 ]
 
 export default function MobileNav() {

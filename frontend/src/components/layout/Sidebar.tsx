@@ -1,9 +1,9 @@
 import { Link, useLocation } from 'react-router-dom'
 
 const navItems = [
-  { icon: 'newspaper', label: 'News Feed', path: '/' },
-  { icon: 'psychology', label: 'Sentiment', path: '/sentiment' },
-  { icon: 'auto_awesome', label: 'Deep Analysis', path: '/analysis' },
+  { icon: 'newspaper', label: '新闻流', path: '/' },
+  { icon: 'psychology', label: '市场情绪', path: '/sentiment' },
+  { icon: 'auto_awesome', label: '深度分析', path: '/analysis' },
 ]
 
 export default function Sidebar() {
@@ -18,10 +18,10 @@ export default function Sidebar() {
     <aside className="hidden lg:flex flex-col gap-4 p-6 w-64 fixed left-0 top-16 h-[calc(100vh-64px)] overflow-y-auto bg-slate-100 dark:bg-slate-900 custom-scrollbar z-40">
       <div className="mb-4">
         <h2 className="text-lg font-black text-violet-700 dark:text-violet-400 font-headline">
-          The Oracle
+          宏观洞察
         </h2>
         <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-          Macro Intelligence
+          智能分析引擎
         </p>
       </div>
 
@@ -44,8 +44,6 @@ export default function Sidebar() {
           )
         })}
       </nav>
-
-
     </aside>
   )
 }

@@ -5,7 +5,10 @@ export default function Header() {
   const { toggle } = useTheme()
   const location = useLocation()
 
-  const isActive = (path: string) => location.pathname === path
+  const isActive = (path: string) => {
+    if (path === '/') return location.pathname === '/'
+    return location.pathname.startsWith(path)
+  }
 
   return (
     <header className="bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-2xl sticky top-0 z-50 shadow-xl shadow-slate-900/5">
@@ -23,7 +26,7 @@ export default function Header() {
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
               }`}
             >
-              Analyze
+              分析
             </Link>
             <Link
               to="/"
@@ -33,7 +36,7 @@ export default function Header() {
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
               }`}
             >
-              Get News
+              获取新闻
             </Link>
           </nav>
         </div>
@@ -41,19 +44,18 @@ export default function Header() {
           <Link
             to="/sentiment"
             className="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 rounded-lg transition-all duration-300"
-            title="Sentiment Dashboard"
+            title="市场情绪"
           >
             <span className="material-symbols-outlined">monitoring</span>
           </Link>
           <button
             onClick={toggle}
             className="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 rounded-lg transition-all duration-300"
-            title="Toggle dark mode"
+            title="切换主题"
           >
             <span className="material-symbols-outlined dark:hidden">dark_mode</span>
             <span className="material-symbols-outlined hidden dark:inline">light_mode</span>
           </button>
-
         </div>
       </div>
       <div className="bg-slate-200/40 dark:bg-slate-800/40 h-px w-full" />

@@ -5,6 +5,12 @@ interface SentimentChipProps {
   size?: 'sm' | 'md'
 }
 
+const LABEL: Record<string, string> = {
+  bullish: '看多',
+  bearish: '看空',
+  neutral: '中性',
+}
+
 export default function SentimentChip({ classification, ticker, score, size = 'md' }: SentimentChipProps) {
   const isBullish = classification === 'bullish'
   const isBearish = classification === 'bearish'
@@ -16,6 +22,7 @@ export default function SentimentChip({ classification, ticker, score, size = 'm
     : 'bg-surface-container-high text-on-surface-variant dark:bg-slate-700 dark:text-slate-300'
 
   const icon = isBullish ? 'trending_up' : isBearish ? 'trending_down' : 'trending_flat'
+  const label = LABEL[classification] || classification
 
   return (
     <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold ${colorClass}`}>
@@ -25,11 +32,11 @@ export default function SentimentChip({ classification, ticker, score, size = 'm
       {ticker && <span>{ticker}</span>}
       {score !== undefined && (
         <span className="opacity-60 font-medium">
-          {ticker ? '| ' : ''}{classification.charAt(0).toUpperCase() + classification.slice(1)} ({score})
+          {ticker ? '| ' : ''}{label} ({score})
         </span>
       )}
-      {!ticker && !score && (
-        <span>{classification.charAt(0).toUpperCase() + classification.slice(1)}</span>
+      {!ticker && score === undefined && (
+        <span>{label}</span>
       )}
     </div>
   )

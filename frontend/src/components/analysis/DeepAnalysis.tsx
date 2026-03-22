@@ -46,17 +46,17 @@ export default function DeepAnalysis() {
   const isLoading = selectedNewsId ? directApi.loading : analysesApi.loading
 
   const handleTrigger = async () => {
-    setTriggerMsg('Analysis triggered...')
+    setTriggerMsg('分析已触发...')
     try {
       await triggerAnalysis()
-      setTriggerMsg('Analysis running in background. Refresh in a moment.')
+      setTriggerMsg('分析正在后台运行，稍后刷新查看')
       setTimeout(() => {
         if (selectedNewsId) directApi.refetch()
         else analysesApi.refetch()
         setTriggerMsg(null)
       }, 5000)
     } catch {
-      setTriggerMsg('Failed to trigger analysis')
+      setTriggerMsg('触发分析失败')
     }
   }
 
@@ -73,12 +73,12 @@ export default function DeepAnalysis() {
             psychology
           </span>
           <h2 className="text-2xl font-extrabold font-headline mb-4 dark:text-white">
-            {selectedNewsId ? 'Analysis Not Found' : 'No Analyses Yet'}
+            {selectedNewsId ? '未找到分析' : '暂无分析'}
           </h2>
           <p className="text-on-surface-variant dark:text-slate-400 mb-8 leading-relaxed">
             {selectedNewsId
               ? 'This news article hasn\'t been analyzed yet. Trigger an analysis to get AI-powered insights.'
-              : 'Run the analysis engine to get AI-powered deep dives on your news articles.'}
+              : '运行分析引擎，获取AI深度分析。'}
           </p>
           <div className="flex justify-center gap-4">
             <button
@@ -113,18 +113,18 @@ export default function DeepAnalysis() {
   const affectedCommodities = safeParseJson<Array<{ name: string; impact_score: number; reason: string }>>(selectedAnalysis.affected_commodities) ?? []
   const affectedSectors = safeParseJson<string[]>(selectedAnalysis.affected_sectors) ?? []
 
-  // Confidence score
+  // 置信度 score
   const confidence = selectedAnalysis.confidence ?? 0
 
   return (
     <div className="flex gap-0">
       {/* Main Content */}
-      <main className="flex-1 xl:mr-80 p-6 md:p-8 space-y-8">
+      <main className="flex-1 xl:mr-80 p-4 md:p-6 lg:p-8 space-y-8">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-xs text-on-surface-variant dark:text-slate-500">
-          <Link to="/" className="hover:text-primary dark:hover:text-violet-400 transition-colors">News</Link>
+          <Link to="/" className="hover:text-primary dark:hover:text-violet-400 transition-colors">新闻</Link>
           <span className="material-symbols-outlined text-[14px]">chevron_right</span>
-          <span className="text-on-surface dark:text-slate-300">Deep Analysis</span>
+          <span className="text-on-surface dark:text-slate-300">深度分析</span>
         </div>
 
         {/* Hero */}
@@ -132,7 +132,7 @@ export default function DeepAnalysis() {
           <div className="flex flex-wrap items-center gap-3">
             <SentimentChip classification={classification} score={selectedAnalysis.overall_sentiment} />
             <span className="text-xs font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-wider">
-              Analyzed {selectedAnalysis.analyzed_at ? new Date(selectedAnalysis.analyzed_at).toLocaleString() : ''}
+              分析时间: {selectedAnalysis.analyzed_at ? new Date(selectedAnalysis.analyzed_at).toLocaleString() : ''}
             </span>
             {selectedAnalysis.llm_provider && (
               <span className="text-[10px] font-bold text-on-surface-variant dark:text-slate-500 bg-surface-container dark:bg-slate-800 px-2 py-1 rounded-full uppercase">
@@ -142,7 +142,7 @@ export default function DeepAnalysis() {
           </div>
 
           <h1 className="text-3xl md:text-4xl font-extrabold font-headline tracking-tight leading-tight dark:text-white">
-            {selectedAnalysis.headline_summary || matchedNews?.title || 'Market Analysis'}
+            {selectedAnalysis.headline_summary || matchedNews?.title || '市场分析'}
           </h1>
 
           {/* News Image */}
@@ -164,11 +164,11 @@ export default function DeepAnalysis() {
           </div>
         </section>
 
-        {/* Confidence Score */}
+        {/* 置信度 Score */}
         <section className="bg-surface-container-lowest dark:bg-slate-900 rounded-2xl p-6">
           <div className="flex items-center gap-3 mb-4">
             <span className="material-symbols-outlined text-primary dark:text-violet-400">verified</span>
-            <h3 className="font-bold font-headline dark:text-white">AI Confidence Score</h3>
+            <h3 className="font-bold font-headline dark:text-white">AI置信度</h3>
           </div>
           <div className="flex items-center gap-6">
             <div className="relative w-24 h-24">
@@ -196,25 +196,25 @@ export default function DeepAnalysis() {
             </div>
             <div className="flex-1">
               <p className="font-bold dark:text-white mb-1">
-                {confidence >= 80 ? 'High Confidence' : confidence >= 50 ? 'Moderate Confidence' : 'Low Confidence'}
+                {confidence >= 80 ? '高置信度' : confidence >= 50 ? '中等置信度' : '低置信度'}
               </p>
               <p className="text-sm text-on-surface-variant dark:text-slate-400 leading-relaxed">
                 {isBullish
                   ? 'The analysis engine identifies a strong positive signal in the underlying data. Multiple corroborating factors suggest upward momentum.'
                   : isBearish
-                  ? 'Warning signals detected across multiple indicators. The analysis suggests caution and potential downside risk.'
-                  : 'Mixed signals across indicators. The market position is unclear and warrants monitoring.'}
+                  ? '多个指标检测到警告信号。分析表明应保持谨慎，存在潜在下行风险。'
+                  : '各指标信号混合。市场方向不明确，需持续关注。'}
               </p>
             </div>
           </div>
         </section>
 
-        {/* Key Factors */}
+        {/* 关键因素 */}
         {keyFactors.length > 0 && (
           <section className="bg-surface-container-lowest dark:bg-slate-900 rounded-2xl p-6 md:p-8">
             <div className="flex items-center gap-3 mb-6">
               <span className="material-symbols-outlined text-primary dark:text-violet-400">checklist</span>
-              <h3 className="font-bold font-headline dark:text-white">Key Factors</h3>
+              <h3 className="font-bold font-headline dark:text-white">关键因素</h3>
             </div>
             <div className="space-y-3">
               {keyFactors.map((factor, i) => (
@@ -240,7 +240,7 @@ export default function DeepAnalysis() {
           <section className="bg-surface-container-lowest dark:bg-slate-900 rounded-2xl p-6 md:p-8">
             <div className="flex items-center gap-3 mb-4">
               <span className="material-symbols-outlined text-primary dark:text-violet-400">timeline</span>
-              <h3 className="font-bold font-headline dark:text-white">The Oracle's Analysis</h3>
+              <h3 className="font-bold font-headline dark:text-white">AI深度解读</h3>
             </div>
             <div className="prose prose-sm dark:prose-invert max-w-none">
               <p className="text-on-surface-variant dark:text-slate-300 leading-relaxed whitespace-pre-line">
@@ -250,10 +250,10 @@ export default function DeepAnalysis() {
           </section>
         )}
 
-        {/* Affected Stocks */}
+        {/* 受影响股票 */}
         {affectedStocks.length > 0 && (
           <section>
-            <h3 className="font-bold font-headline mb-4 dark:text-white">Affected Stocks</h3>
+            <h3 className="font-bold font-headline mb-4 dark:text-white">受影响股票</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {affectedStocks.map((stock) => {
                 const positive = stock.impact_score > 0
@@ -282,10 +282,10 @@ export default function DeepAnalysis() {
           </section>
         )}
 
-        {/* Recent Analyses List (when no specific ID) */}
+        {/* 近期分析 List (when no specific ID) */}
         {!selectedNewsId && analyses.length > 1 && (
           <section>
-            <h3 className="text-xl font-extrabold font-headline mb-6 dark:text-white">Recent Analyses</h3>
+            <h3 className="text-xl font-extrabold font-headline mb-6 dark:text-white">近期分析</h3>
             <div className="space-y-3">
               {analyses.slice(1, 10).map((a) => {
                 const aNews = newsItems.find(n => n.id === a.news_id)
@@ -325,11 +325,11 @@ export default function DeepAnalysis() {
       {/* Right Sidebar */}
       <aside className="hidden xl:block fixed right-0 top-16 w-80 h-[calc(100vh-64px)] p-6 overflow-y-auto custom-scrollbar bg-surface-container-low dark:bg-slate-900/50 border-l border-surface-container dark:border-slate-800">
         <div className="space-y-8">
-          {/* Sector Impact */}
+          {/* 板块影响 */}
           {affectedSectors.length > 0 && (
             <div className="space-y-4">
               <h3 className="text-sm font-black font-headline tracking-widest uppercase text-on-surface-variant dark:text-slate-400">
-                Sector Impact
+                板块影响
               </h3>
               <div className="space-y-3">
                 {affectedSectors.map((sector, i) => (
@@ -355,11 +355,11 @@ export default function DeepAnalysis() {
             </div>
           )}
 
-          {/* Commodity Impact */}
+          {/* 大宗商品影响 */}
           {affectedCommodities.length > 0 && (
             <div className="space-y-4">
               <h3 className="text-sm font-black font-headline tracking-widest uppercase text-on-surface-variant dark:text-slate-400">
-                Commodity Impact
+                大宗商品影响
               </h3>
               <div className="space-y-3">
                 {affectedCommodities.map((c, i) => {
@@ -387,16 +387,16 @@ export default function DeepAnalysis() {
             </div>
           )}
 
-          {/* Key Metrics */}
+          {/* 关键指标 */}
           <div className="space-y-4">
             <h3 className="text-sm font-black font-headline tracking-widest uppercase text-on-surface-variant dark:text-slate-400">
-              Key Metrics
+              关键指标
             </h3>
             <div className="space-y-3">
               {[
-                { label: 'Sentiment Score', value: selectedAnalysis.overall_sentiment?.toFixed(1) ?? '—', icon: 'monitoring' },
-                { label: 'Confidence', value: `${confidence}%`, icon: 'verified' },
-                { label: 'Classification', value: classification.charAt(0).toUpperCase() + classification.slice(1), icon: 'label' },
+                { label: '情绪分数', value: selectedAnalysis.overall_sentiment?.toFixed(1) ?? '—', icon: 'monitoring' },
+                { label: '置信度', value: `${confidence}%`, icon: 'verified' },
+                { label: '分类', value: classification.charAt(0).toUpperCase() + classification.slice(1), icon: 'label' },
               ].map(m => (
                 <div key={m.label} className="flex items-center gap-3 p-3 bg-surface-container-lowest dark:bg-slate-800 rounded-xl">
                   <span className="material-symbols-outlined text-primary dark:text-violet-400 text-xl">{m.icon}</span>
