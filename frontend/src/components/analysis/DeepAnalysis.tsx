@@ -303,13 +303,15 @@ export default function DeepAnalysis() {
                     to={`/analysis/${a.news_id}`}
                     className="flex items-center gap-4 p-4 bg-surface-container-lowest dark:bg-slate-900 rounded-xl hover:shadow-md transition-all group"
                   >
-                    <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
-                      <NewsImage
-                        src={getRealImageUrl(aNews?.image_url)}
-                        alt={a.headline_summary || ''}
-                        className="w-full h-full"
-                      />
-                    </div>
+                    {getRealImageUrl(aNews?.image_url) && (
+                      <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
+                        <NewsImage
+                          src={getRealImageUrl(aNews?.image_url)}
+                          alt={a.headline_summary || ''}
+                          className="w-full h-full"
+                        />
+                      </div>
+                    )}
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-sm truncate group-hover:text-primary dark:text-white dark:group-hover:text-violet-400 transition-colors">
                         {a.headline_summary || aNews?.title || `Analysis #${a.id}`}
