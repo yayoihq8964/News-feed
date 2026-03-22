@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import type { NewsItem } from '../../types'
 import NewsImage from './NewsImage'
 import SentimentChip from '../common/SentimentChip'
@@ -13,45 +14,57 @@ export default function NewsCard({ item }: NewsCardProps) {
   const classification = analysis?.classification
   const rawImageUrl = item.image_url || (item as any).urlToImage
   const imageUrl = getRealImageUrl(rawImageUrl)
+  const hasAnalysis = item.analysis_status === 'completed' && analysis
+
+  const titleContent = (
+    <h2 className="text-lg font-bold font-headline leading-snug text-on-surface dark:text-slate-100 group-hover:text-primary dark:group-hover:text-violet-400 transition-colors duration-200">
+      {item.title}
+    </h2>
+  )
 
   return (
-    <article className="group bg-surface-container-lowest dark:bg-slate-800 rounded-2xl p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/5 dark:hover:shadow-violet-900/10 border-l-4 border-primary dark:border-violet-500">
-      <div className="flex flex-col md:flex-row gap-6">
-        <div className="flex-1 space-y-4 min-w-0">
+    <article className="group bg-white dark:bg-slate-800 rounded-xl p-5 transition-all duration-200 hover:shadow-md dark:hover:shadow-slate-900/40 border border-slate-100 dark:border-slate-700/60">
+      <div className="flex gap-4">
+        {/* Text content - left */}
+        <div className="flex-1 flex flex-col gap-2.5 min-w-0">
           {/* Source + Time */}
-          <div className="flex items-center gap-3 text-xs font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-widest flex-wrap">
+          <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest flex-wrap">
             <span className="text-primary dark:text-violet-400">{item.source}</span>
-            <span className="w-1 h-1 bg-outline-variant rounded-full" />
-            <span>{timeAgo(item.published_at)}</span>
-            {item.analysis_status === 'completed' && (
+            <span className="w-1 h-1 bg-slate-300 dark:bg-slate-600 rounded-full" />
+            <span className="text-slate-400 dark:text-slate-500">{timeAgo(item.published_at)}</span>
+            {hasAnalysis && (
               <>
-                <span className="w-1 h-1 bg-outline-variant rounded-full" />
-                <span className="text-tertiary dark:text-emerald-400">AI已分析</span>
+                <span className="w-1 h-1 bg-slate-300 dark:bg-slate-600 rounded-full" />
+                <span className="text-emerald-500 dark:text-emerald-400">AI已分析</span>
               </>
             )}
           </div>
 
-          {/* Title */}
-          <h2 className="text-xl font-bold font-headline leading-tight dark:text-slate-100">
-            {item.title}
-          </h2>
+          {/* Title - linked if analysis exists */}
+          {hasAnalysis ? (
+            <Link to={`/analysis/${item.id}`} className="block">
+              {titleContent}
+            </Link>
+          ) : (
+            titleContent
+          )}
 
           {/* Chinese title translation */}
           {analysis?.title_zh && analysis.title_zh !== item.title && (
-            <p className="text-sm text-on-surface-variant dark:text-slate-400 border-l-2 border-violet-300/40 dark:border-violet-600/40 pl-3">
+            <p className="text-sm text-slate-500 dark:text-slate-400 leading-snug">
               {analysis.title_zh}
             </p>
           )}
 
           {/* Summary */}
           {item.summary && (
-            <p className="text-on-surface-variant dark:text-slate-400 leading-relaxed text-sm line-clamp-2">
+            <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-sm line-clamp-2">
               {item.summary}
             </p>
           )}
 
           {/* Chips */}
-          <div className="flex flex-wrap gap-2 pt-1">
+          <div className="flex flex-wrap gap-2 pt-0.5">
             {classification && (
               <SentimentChip
                 classification={classification}
@@ -70,52 +83,50 @@ export default function NewsCard({ item }: NewsCardProps) {
             {analysis?.affected_sectors?.slice(0, 2).map((sector) => (
               <div
                 key={sector}
-                className="flex items-center gap-1.5 bg-surface-container-high dark:bg-slate-700 text-on-surface-variant dark:text-slate-300 px-3 py-1.5 rounded-lg text-xs font-bold"
+                className="flex items-center gap-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wide"
               >
-                <span className="material-symbols-outlined text-[14px]">token</span>
+                <span className="material-symbols-outlined text-[12px]">token</span>
                 {sector}
               </div>
             ))}
           </div>
 
-          {/* Analysis excerpt (Chinese) */}
+          {/* Analysis excerpt */}
           {analysis?.headline_summary && (
-            <p className="text-xs text-on-surface-variant dark:text-slate-500 italic border-l-2 border-primary/20 pl-3">
+            <p className="text-xs text-slate-400 dark:text-slate-500 italic">
               {analysis.headline_summary}
             </p>
           )}
+
+          {/* Pending/processing status */}
+          {(item.analysis_status === 'pending' || item.analysis_status === 'processing') && (
+            <div className="pt-1">
+              {item.analysis_status === 'pending' && (
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  等待分析
+                </span>
+              )}
+              {item.analysis_status === 'processing' && (
+                <span className="flex items-center gap-1 text-[10px] font-bold text-primary uppercase tracking-wider">
+                  <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+                  分析中...
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Image */}
+        {/* Image - right, only when imageUrl exists */}
         {imageUrl && (
-          <div className="w-full md:w-48 flex-shrink-0">
-            <div className="w-full h-32 rounded-xl overflow-hidden">
-              <NewsImage
-                src={imageUrl}
-                alt={item.title}
-                className="w-full h-full"
-              />
-            </div>
+          <div className="flex-shrink-0 w-36 h-28 md:w-40 md:h-28 rounded-lg overflow-hidden self-start">
+            <NewsImage
+              src={imageUrl}
+              alt={item.title}
+              className="w-full h-full"
+            />
           </div>
         )}
       </div>
-
-      {/* Footer - status only */}
-      {(item.analysis_status === 'pending' || item.analysis_status === 'processing') && (
-        <div className="mt-4 pt-4 border-t border-slate-100/50 dark:border-slate-700/50">
-          {item.analysis_status === 'pending' && (
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-              等待分析
-            </span>
-          )}
-          {item.analysis_status === 'processing' && (
-            <span className="flex items-center gap-1 text-[10px] font-bold text-primary uppercase tracking-wider">
-              <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
-              分析中...
-            </span>
-          )}
-        </div>
-      )}
     </article>
   )
 }
