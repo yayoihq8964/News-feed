@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     finnhub_api_key: str = ""
     newsapi_api_key: str = ""
     gnews_api_key: str = ""
+    massive_api_key: str = ""
 
     # Default LLM
     default_llm_provider: str = "openai"  # openai/anthropic/grok/ollama

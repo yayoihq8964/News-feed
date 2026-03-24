@@ -7,6 +7,9 @@ from app.models.database import get_db, insert_news_item, get_setting
 from app.services.finnhub_client import fetch_finnhub_news
 from app.services.newsapi_client import fetch_newsapi_news
 from app.services.gnews_client import fetch_gnews_news
+from app.services.massive_client import fetch_massive_news
+from app.services.googlenews_client import fetch_google_news
+from app.services.seekingalpha_client import fetch_seekingalpha_news
 from app.utils.dedup import compute_content_hash
 
 logger = logging.getLogger(__name__)
@@ -14,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 async def _get_api_keys(db) -> dict:
     keys = {}
-    for key in ["finnhub_api_key", "newsapi_api_key", "gnews_api_key"]:
+    for key in ["finnhub_api_key", "newsapi_api_key", "gnews_api_key", "massive_api_key"]:
         val = await get_setting(db, key)
         keys[key] = val or getattr(app_settings, key, "")
     return keys
@@ -34,6 +37,9 @@ async def aggregate_all_news() -> int:
             fetch_finnhub_news(keys["finnhub_api_key"]),
             fetch_newsapi_news(keys["newsapi_api_key"]),
             fetch_gnews_news(keys["gnews_api_key"]),
+            fetch_massive_news(keys["massive_api_key"]),
+            fetch_google_news(),           # Free, no key needed
+            fetch_seekingalpha_news(),      # Free, no key needed
             return_exceptions=True,
         )
 
