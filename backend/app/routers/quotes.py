@@ -24,6 +24,17 @@ COMMODITIES = {
 
 ALL_SYMBOLS = {**INDICES, **COMMODITIES}
 
+# Proxy ETFs for fundamental data (indices/commodities lack market_cap, PE, yield)
+_ETF_PROXY: dict[str, str] = {
+    "^IXIC": "QQQ",
+    "^GSPC": "SPY",
+    "^N225": "EWJ",
+    "000001.SS": "ASHR",
+    "GC=F": "GLD",
+    "SI=F": "SLV",
+    "CL=F": "USO",
+}
+
 # Cache to avoid hitting API too frequently
 _cache: dict = {"data": None, "ts": 0}
 CACHE_TTL = 120  # 2 minutes
@@ -232,6 +243,15 @@ async def get_profile(symbol: str):
         except Exception:
             fi_open = fi_high = fi_low = fi_vol = fi_year_low = fi_year_high = fi_50d = fi_200d = None
 
+        # Fetch proxy ETF fundamentals if the symbol itself lacks them
+        etf_info: dict = {}
+        proxy = _ETF_PROXY.get(symbol)
+        if proxy and not info.get("marketCap"):
+            try:
+                etf_info = yf.Ticker(proxy).info or {}
+            except Exception:
+                pass
+
         def _r(v):
             return round(float(v), 2) if v is not None else None
 
@@ -240,9 +260,9 @@ async def get_profile(symbol: str):
             "name": ALL_SYMBOLS[symbol]["name"],
             "shortName": info.get("shortName", ALL_SYMBOLS[symbol]["name"]),
             "description": info.get("longBusinessSummary") or info.get("description", ""),
-            "market_cap": info.get("marketCap"),
-            "pe_ratio": info.get("trailingPE") or info.get("forwardPE"),
-            "dividend_yield": info.get("dividendYield"),
+            "market_cap": info.get("marketCap") or etf_info.get("totalAssets") or etf_info.get("marketCap"),
+            "pe_ratio": info.get("trailingPE") or info.get("forwardPE") or etf_info.get("trailingPE"),
+            "dividend_yield": info.get("dividendYield") or etf_info.get("yield") or etf_info.get("dividendYield"),
             "avg_volume": info.get("averageVolume") or info.get("averageDailyVolume10Day"),
             "open": _r(info.get("open") or info.get("regularMarketOpen") or fi_open),
             "day_high": _r(info.get("dayHigh") or info.get("regularMarketDayHigh") or fi_high),
@@ -252,7 +272,8 @@ async def get_profile(symbol: str):
             "year_high": _r(info.get("fiftyTwoWeekHigh") or fi_year_high),
             "fifty_day_avg": _r(info.get("fiftyDayAverage") or fi_50d),
             "two_hundred_day_avg": _r(info.get("twoHundredDayAverage") or fi_200d),
-            "beta": info.get("beta"),
+            "beta": info.get("beta") or etf_info.get("beta3Year") or etf_info.get("beta"),
+            "etf_proxy": proxy,
         }
 
         _profile_cache[symbol] = {"data": result, "ts": now}
