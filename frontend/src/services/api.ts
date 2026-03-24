@@ -189,6 +189,17 @@ export interface AssetSentiment {
 export const getAssetSentiment = (symbol: string, days = 7) =>
   request<AssetSentiment>(`/api/quotes/${encodeURIComponent(symbol)}/sentiment?days=${days}`)
 
+// Top Constituents
+export interface Constituent {
+  ticker: string
+  name: string
+  weight: number
+  changePercent: number | null
+}
+
+export const getConstituents = (symbol: string) =>
+  request<{ symbol: string; constituents: Constituent[] }>(`/api/quotes/${encodeURIComponent(symbol)}/constituents`)
+
 // Calendar
 export const getCalendar = () =>
   request<{ events: CalendarEvent[]; count: number }>('/api/calendar');

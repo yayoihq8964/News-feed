@@ -158,8 +158,8 @@ async def get_candles(
 
         # Compute moving averages on Close
         close = df["Close"]
-        ema20 = close.ewm(span=20, adjust=False).mean()
-        sma50 = close.rolling(window=min(50, len(close))).mean()
+        ema20 = close.ewm(span=min(20, len(close)), min_periods=1, adjust=False).mean()
+        sma50 = close.rolling(window=min(50, len(close)), min_periods=1).mean()
 
         candles = []
         ema_points = []
@@ -267,3 +267,82 @@ async def get_asset_sentiment_api(
     except Exception as e:
         logger.error(f"Sentiment aggregation failed for {symbol}: {e}")
         raise HTTPException(500, f"Failed to aggregate sentiment: {e}")
+
+
+# ── Top Constituents (index weight contributors) ────────────────
+
+_CONSTITUENTS: dict[str, list[dict]] = {
+    "^IXIC": [
+        {"ticker": "AAPL", "name": "Apple Inc.", "weight": 12.4},
+        {"ticker": "MSFT", "name": "Microsoft Corp.", "weight": 10.2},
+        {"ticker": "NVDA", "name": "NVIDIA Corp.", "weight": 6.8},
+        {"ticker": "AMZN", "name": "Amazon.com Inc.", "weight": 5.6},
+        {"ticker": "META", "name": "Meta Platforms", "weight": 4.3},
+    ],
+    "^GSPC": [
+        {"ticker": "AAPL", "name": "Apple Inc.", "weight": 7.1},
+        {"ticker": "MSFT", "name": "Microsoft Corp.", "weight": 6.8},
+        {"ticker": "NVDA", "name": "NVIDIA Corp.", "weight": 5.2},
+        {"ticker": "AMZN", "name": "Amazon.com Inc.", "weight": 3.8},
+        {"ticker": "GOOG", "name": "Alphabet Inc.", "weight": 3.5},
+    ],
+    "^N225": [
+        {"ticker": "TM", "name": "Toyota Motor", "weight": 4.8},
+        {"ticker": "SONY", "name": "Sony Group", "weight": 3.2},
+        {"ticker": "6758.T", "name": "Sony Group (TSE)", "weight": 3.2},
+        {"ticker": "7203.T", "name": "Toyota Motor (TSE)", "weight": 4.8},
+        {"ticker": "8306.T", "name": "Mitsubishi UFJ", "weight": 2.5},
+    ],
+}
+
+_const_cache: dict = {}
+_CONST_TTL = 300  # 5 min
+
+
+@router.get("/{symbol:path}/constituents")
+async def get_constituents(symbol: str):
+    """Return top weight contributors with live change % for an index."""
+    if symbol not in ALL_SYMBOLS:
+        raise HTTPException(404, f"Unknown symbol: {symbol}")
+
+    mapping = _CONSTITUENTS.get(symbol)
+    if not mapping:
+        return {"symbol": symbol, "constituents": []}
+
+    now = time.time()
+    cached = _const_cache.get(symbol)
+    if cached and (now - cached["ts"]) < _CONST_TTL:
+        return cached["data"]
+
+    try:
+        tickers_str = " ".join(c["ticker"] for c in mapping)
+        tks = yf.Tickers(tickers_str)
+        result_list = []
+
+        for c in mapping:
+            try:
+                t = tks.tickers.get(c["ticker"])
+                if t:
+                    fi = t.fast_info
+                    prc = fi.last_price
+                    prev = fi.previous_close
+                    chg_pct = ((prc - prev) / prev * 100) if prc and prev else None
+                else:
+                    chg_pct = None
+            except Exception:
+                chg_pct = None
+
+            result_list.append({
+                "ticker": c["ticker"],
+                "name": c["name"],
+                "weight": c["weight"],
+                "changePercent": round(chg_pct, 2) if chg_pct is not None else None,
+            })
+
+        result = {"symbol": symbol, "constituents": result_list}
+        _const_cache[symbol] = {"data": result, "ts": now}
+        return result
+
+    except Exception as e:
+        logger.error(f"Constituents fetch failed for {symbol}: {e}")
+        raise HTTPException(500, f"Failed to fetch constituents: {e}")

@@ -1,6 +1,9 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useApi } from '../../hooks/useApi'
-import { getCandles, getAssetProfile, getAssetSentiment, type MarketQuote, type CandleData, type AssetProfile, type AssetSentiment } from '../../services/api'
+import {
+  getCandles, getAssetProfile, getAssetSentiment, getConstituents,
+  type MarketQuote, type CandleData, type AssetProfile, type AssetSentiment, type Constituent,
+} from '../../services/api'
 
 interface AssetDetailModalProps {
   quote: MarketQuote
@@ -23,7 +26,7 @@ function CandlestickChart({ data }: { data: CandleData }) {
   const minP = Math.min(...allPrices)
   const maxP = Math.max(...allPrices)
   const range = maxP - minP || 1
-  const padded = range * 0.08 // 8% vertical padding
+  const padded = range * 0.08
   const low = minP - padded
   const high = maxP + padded
   const yRange = high - low
@@ -34,13 +37,11 @@ function CandlestickChart({ data }: { data: CandleData }) {
   const step = (CHART_W - PAD.left - PAD.right) / n
   const toX = (i: number) => PAD.left + step * i + step / 2
 
-  // Y-axis labels (5 ticks)
   const yTicks = Array.from({ length: 5 }, (_, i) => {
     const val = high - (yRange * i) / 4
     return { val, y: toY(val) }
   })
 
-  // Build MA paths from time lookup
   const timeIdx = new Map(candles.map((c, i) => [c.time, i]))
 
   const maPath = (pts: { time: string; value: number }[]) => {
@@ -54,22 +55,15 @@ function CandlestickChart({ data }: { data: CandleData }) {
   return (
     <div className="w-full h-64 md:h-80 relative">
       <svg className="w-full h-full" viewBox={`0 0 ${CHART_W} ${CHART_H}`} preserveAspectRatio="none">
-        {/* Grid lines */}
         {yTicks.map((t, i) => (
           <line key={i} x1={0} x2={CHART_W} y1={t.y} y2={t.y} stroke="currentColor" className="text-outline-variant/15 dark:text-slate-700/50" strokeWidth={1} />
         ))}
-
-        {/* SMA 50 (dashed, below EMA) */}
         {sma50.length > 1 && (
           <path d={maPath(sma50)} fill="none" stroke="#4953ac" strokeWidth={2.5} strokeDasharray="6,4" />
         )}
-
-        {/* EMA 20 (solid) */}
         {ema20.length > 1 && (
           <path d={maPath(ema20)} fill="none" stroke="#6a1cf6" strokeWidth={2.5} />
         )}
-
-        {/* Candlesticks */}
         {candles.map((c, i) => {
           const x = toX(i)
           const isUp = c.close >= c.open
@@ -79,16 +73,12 @@ function CandlestickChart({ data }: { data: CandleData }) {
           const bodyH = Math.max(1, bodyBot - bodyTop)
           return (
             <g key={i}>
-              {/* Wick */}
               <line x1={x} x2={x} y1={toY(c.high)} y2={toY(c.low)} stroke={color} strokeWidth={1.2} />
-              {/* Body */}
               <rect x={x - barW / 2} y={bodyTop} width={barW} height={bodyH} fill={color} rx={1} />
             </g>
           )
         })}
       </svg>
-
-      {/* Y-Axis Labels */}
       <div className="absolute left-1 top-0 bottom-0 flex flex-col justify-between text-[10px] font-bold text-on-surface-variant/50 dark:text-slate-500 pointer-events-none py-1">
         {yTicks.map((t, i) => (
           <span key={i} className="tabular-nums">
@@ -111,11 +101,22 @@ function fmtLargeNum(n: number | null | undefined): string {
   return `$${n.toLocaleString()}`
 }
 
+function fmtPrice(n: number | null | undefined): string {
+  if (n == null) return '—'
+  return `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
+function fmtVolume(n: number | null | undefined): string {
+  if (n == null) return '—'
+  if (n >= 1e9) return `${(n / 1e9).toFixed(2)}B`
+  if (n >= 1e6) return `${(n / 1e6).toFixed(2)}M`
+  if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`
+  return n.toLocaleString()
+}
+
 function fmtCompact(n: number | null | undefined): string {
   if (n == null) return '—'
-  if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`
-  if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`
-  return n.toLocaleString(undefined, { maximumFractionDigits: 2 })
+  return `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
 // ── Main Modal ──────────────────────────────────────────────────
@@ -123,21 +124,10 @@ export default function AssetDetailModal({ quote, onClose }: AssetDetailModalPro
   const [timeframe, setTimeframe] = useState<Timeframe>('1D')
   const [visible, setVisible] = useState(false)
 
-  // Fetch candle data (re-fetches on timeframe change)
-  const candleApi = useApi<CandleData>(
-    () => getCandles(quote.symbol, timeframe),
-    [quote.symbol, timeframe],
-  )
-  // Fetch profile once
-  const profileApi = useApi<AssetProfile>(
-    () => getAssetProfile(quote.symbol),
-    [quote.symbol],
-  )
-  // Fetch sentiment
-  const sentimentApi = useApi<AssetSentiment>(
-    () => getAssetSentiment(quote.symbol),
-    [quote.symbol],
-  )
+  const candleApi = useApi<CandleData>(() => getCandles(quote.symbol, timeframe), [quote.symbol, timeframe])
+  const profileApi = useApi<AssetProfile>(() => getAssetProfile(quote.symbol), [quote.symbol])
+  const sentimentApi = useApi<AssetSentiment>(() => getAssetSentiment(quote.symbol), [quote.symbol])
+  const constApi = useApi<{ symbol: string; constituents: Constituent[] }>(() => getConstituents(quote.symbol), [quote.symbol])
 
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true))
@@ -172,6 +162,8 @@ export default function AssetDetailModal({ quote, onClose }: AssetDetailModalPro
   const description = profile?.description
     ? (profile.description.length > 120 ? profile.description.slice(0, 120) + '…' : profile.description)
     : `${quote.name} market data & analysis.`
+
+  const constituents = constApi.data?.constituents ?? []
 
   return (
     <div
@@ -324,72 +316,130 @@ export default function AssetDetailModal({ quote, onClose }: AssetDetailModalPro
             </div>
           </div>
 
-          {/* ── Metrics ──────────────────────────── */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="p-5 rounded-2xl bg-surface-container-low dark:bg-slate-800/60">
-              <span className="text-[10px] font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-widest block mb-2">Market Cap</span>
-              <span className="text-xl font-bold font-headline dark:text-white">
-                {profile ? fmtLargeNum(profile.market_cap) : <Skeleton />}
-              </span>
-            </div>
-            <div className="p-5 rounded-2xl bg-surface-container-low dark:bg-slate-800/60">
-              <span className="text-[10px] font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-widest block mb-2">P/E Ratio</span>
-              <span className="text-xl font-bold font-headline dark:text-white">
-                {profile ? (profile.pe_ratio != null ? profile.pe_ratio.toFixed(2) : '—') : <Skeleton />}
-              </span>
-            </div>
-            <div className="p-5 rounded-2xl bg-surface-container-low dark:bg-slate-800/60">
-              <span className="text-[10px] font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-widest block mb-2">Dividend Yield</span>
-              <span className="text-xl font-bold font-headline dark:text-white">
-                {profile ? (profile.dividend_yield != null ? `${(profile.dividend_yield * 100).toFixed(2)}%` : '—') : <Skeleton />}
-              </span>
-            </div>
-            <div className="p-5 rounded-2xl bg-surface-container-low dark:bg-slate-800/60">
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-[10px] font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-widest">52-Week Range</span>
+          {/* ── Bottom: Financial Metrics + Constituents + Actions ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left 2/3: OHLV cards + Market Statistics */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* OHLV Quick Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { label: 'OPEN', value: fmtPrice(profile?.open) },
+                  { label: 'HIGH', value: fmtPrice(profile?.day_high) },
+                  { label: 'LOW', value: fmtPrice(profile?.day_low) },
+                  { label: 'VOLUME', value: fmtVolume(profile?.avg_volume) },
+                ].map((item) => (
+                  <div key={item.label} className="bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-sm border border-surface-container-low dark:border-slate-700/30 hover:-translate-y-0.5 hover:shadow-md transition-all">
+                    <p className="text-[11px] font-bold text-on-surface-variant/70 dark:text-slate-400 uppercase tracking-widest mb-1">{item.label}</p>
+                    <p className="text-xl font-bold text-on-surface dark:text-white tracking-tight font-headline">
+                      {profile ? item.value : <Skeleton />}
+                    </p>
+                  </div>
+                ))}
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold dark:text-slate-300 tabular-nums">{fmtCompact(yearLow)}</span>
-                <div className="flex-1 h-2 bg-surface-container-high dark:bg-slate-700 rounded-full overflow-hidden relative">
-                  <div className="absolute left-0 top-0 h-full bg-primary rounded-full" style={{ width: `${Math.min(yearProgress, 100)}%` }} />
+
+              {/* Market Statistics Table */}
+              <div className="bg-surface-container-low dark:bg-slate-800/60 rounded-3xl p-6 md:p-8">
+                <h3 className="font-headline font-bold text-lg mb-6 dark:text-white">Market Statistics</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-5">
+                  <div className="flex justify-between items-center py-2 border-b border-surface-variant/30 dark:border-slate-700/40">
+                    <span className="text-sm text-on-surface-variant dark:text-slate-400 font-medium">Market Cap</span>
+                    <span className="text-sm font-bold text-on-surface dark:text-white">
+                      {profile ? fmtLargeNum(profile.market_cap) : <Skeleton />}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-surface-variant/30 dark:border-slate-700/40">
+                    <span className="text-sm text-on-surface-variant dark:text-slate-400 font-medium">P/E Ratio</span>
+                    <span className="text-sm font-bold text-on-surface dark:text-white">
+                      {profile ? (profile.pe_ratio != null ? profile.pe_ratio.toFixed(2) : '—') : <Skeleton />}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-surface-variant/30 dark:border-slate-700/40">
+                    <span className="text-sm text-on-surface-variant dark:text-slate-400 font-medium">Dividend Yield</span>
+                    <span className="text-sm font-bold text-on-surface dark:text-white">
+                      {profile ? (profile.dividend_yield != null ? `${(profile.dividend_yield * 100).toFixed(2)}%` : '—') : <Skeleton />}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-surface-variant/30 dark:border-slate-700/40">
+                    <span className="text-sm text-on-surface-variant dark:text-slate-400 font-medium">Avg. Volume</span>
+                    <span className="text-sm font-bold text-on-surface dark:text-white">
+                      {profile ? fmtVolume(profile.avg_volume) : <Skeleton />}
+                    </span>
+                  </div>
+                  {/* 52-Week Range — full width */}
+                  <div className="md:col-span-2">
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="text-sm text-on-surface-variant dark:text-slate-400 font-medium">52-Week Range</span>
+                      <div className="flex gap-4">
+                        <span className="text-xs font-bold dark:text-white">{fmtCompact(yearLow)}</span>
+                        <span className="text-xs font-bold dark:text-white">{fmtCompact(yearHigh)}</span>
+                      </div>
+                    </div>
+                    <div className="w-full h-2 bg-surface-variant/40 dark:bg-slate-700 rounded-full relative overflow-hidden">
+                      <div
+                        className="absolute h-full bg-primary rounded-full shadow-[0_0_10px_rgba(106,28,246,0.3)]"
+                        style={{ left: 0, width: `${Math.min(yearProgress, 100)}%` }}
+                      />
+                    </div>
+                  </div>
                 </div>
-                <span className="text-[10px] font-bold dark:text-slate-300 tabular-nums">{fmtCompact(yearHigh)}</span>
+              </div>
+            </div>
+
+            {/* Right 1/3: Constituents + Actions */}
+            <div className="space-y-6">
+              {/* Top Weight Contributors */}
+              {constituents.length > 0 && (
+                <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-surface-container-low dark:border-slate-700/30">
+                  <h4 className="text-on-surface dark:text-white font-bold text-sm mb-6">Top Weight Contributors</h4>
+                  <div className="space-y-5">
+                    {constituents.map((c) => {
+                      const cPos = c.changePercent != null && c.changePercent > 0
+                      const cNeg = c.changePercent != null && c.changePercent < 0
+                      return (
+                        <div key={c.ticker} className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-2xl bg-surface-container-low dark:bg-slate-700 flex items-center justify-center">
+                              <span className="material-symbols-outlined text-on-surface-variant dark:text-slate-400 text-lg">monitoring</span>
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-on-surface dark:text-white">{c.name}</p>
+                              <p className="text-[10px] font-semibold text-on-surface-variant dark:text-slate-400">
+                                {c.ticker} • {c.weight}% weight
+                              </p>
+                            </div>
+                          </div>
+                          <span className={`text-xs font-bold ${
+                            cPos ? 'text-tertiary dark:text-emerald-400' : cNeg ? 'text-error dark:text-red-400' : 'text-on-surface-variant'
+                          }`}>
+                            {c.changePercent != null ? `${cPos ? '+' : ''}${c.changePercent.toFixed(1)}%` : '—'}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex flex-col gap-3">
+                <button className="w-full py-4 bg-primary text-white font-headline font-bold rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform active:scale-95 flex items-center justify-center gap-2">
+                  <span className="material-symbols-outlined">swap_vert</span>
+                  Trade Now
+                </button>
+                <button className="w-full py-4 bg-surface-container-highest dark:bg-slate-700 text-on-surface dark:text-slate-200 font-headline font-bold rounded-2xl hover:bg-surface-variant dark:hover:bg-slate-600 transition-colors active:scale-95 flex items-center justify-center gap-2">
+                  <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                  Add to Watchlist
+                </button>
               </div>
             </div>
           </div>
 
-          {/* ── Action Bar ───────────────────────── */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-outline-variant/10 dark:border-slate-700/30">
-            <div className="flex items-center gap-3">
-              <div className="flex -space-x-2.5">
-                <div className="w-9 h-9 rounded-full bg-violet-200 dark:bg-violet-800 border-2 border-white dark:border-slate-900 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-violet-600 dark:text-violet-300 text-sm">person</span>
-                </div>
-                <div className="w-9 h-9 rounded-full bg-emerald-200 dark:bg-emerald-800 border-2 border-white dark:border-slate-900 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-emerald-600 dark:text-emerald-300 text-sm">person</span>
-                </div>
-                <div className="w-9 h-9 rounded-full bg-surface-container-highest dark:bg-slate-700 border-2 border-white dark:border-slate-900 flex items-center justify-center text-[10px] font-bold text-on-surface-variant dark:text-slate-300">
-                  +12
-                </div>
-              </div>
-              <span className="text-xs font-medium text-on-surface-variant dark:text-slate-400">Top analysts are currently watching this.</span>
-            </div>
-            <div className="flex gap-3 w-full sm:w-auto">
-              <button className="flex-1 sm:flex-none px-8 py-3.5 bg-primary text-on-primary rounded-xl font-bold text-sm tracking-wide shadow-lg shadow-primary/20 active:scale-95 transition-all hover:shadow-xl">
-                Execute Trade
-              </button>
-              <button className="px-4 py-3.5 bg-surface-container-highest dark:bg-slate-700 text-on-surface dark:text-slate-200 rounded-xl flex items-center justify-center active:scale-95 transition-all">
-                <span className="material-symbols-outlined">star</span>
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>
   )
 }
 
-// Tiny skeleton placeholder
 function Skeleton() {
   return <span className="inline-block w-16 h-5 bg-surface-container-high dark:bg-slate-700 rounded animate-pulse" />
 }
