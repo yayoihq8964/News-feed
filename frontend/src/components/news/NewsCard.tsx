@@ -7,9 +7,10 @@ import { getRealImageUrl } from '../../utils/image'
 
 interface NewsCardProps {
   item: NewsItem
+  onTickerClick?: (ticker: string, name?: string) => void
 }
 
-export default function NewsCard({ item }: NewsCardProps) {
+export default function NewsCard({ item, onTickerClick }: NewsCardProps) {
   const analysis = item.analysis
   const classification = analysis?.classification
   const rawImageUrl = item.image_url || (item as any).urlToImage
@@ -83,13 +84,24 @@ export default function NewsCard({ item }: NewsCardProps) {
               />
             )}
             {analysis?.affected_stocks?.slice(0, 2).map((stock) => (
-              <SentimentChip
+              <div
                 key={stock.ticker}
-                classification={stock.impact_score > 0 ? 'bullish' : 'bearish'}
-                ticker={stock.ticker}
-                score={Math.round(Math.abs(stock.impact_score))}
-                size="sm"
-              />
+                className={onTickerClick ? 'cursor-pointer hover:opacity-80 active:scale-95 transition-all' : ''}
+                onClick={(e) => {
+                  if (onTickerClick) {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    onTickerClick(stock.ticker, stock.company)
+                  }
+                }}
+              >
+                <SentimentChip
+                  classification={stock.impact_score > 0 ? 'bullish' : 'bearish'}
+                  ticker={stock.ticker}
+                  score={Math.round(Math.abs(stock.impact_score))}
+                  size="sm"
+                />
+              </div>
             ))}
             {analysis?.affected_sectors?.slice(0, 2).map((sector) => (
               <div

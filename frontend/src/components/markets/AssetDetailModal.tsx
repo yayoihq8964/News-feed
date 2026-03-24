@@ -6,7 +6,10 @@ import {
 } from '../../services/api'
 
 interface AssetDetailModalProps {
-  quote: MarketQuote
+  // Either a full MarketQuote or just a symbol identifier
+  quote?: MarketQuote
+  symbol?: string       // e.g. "AMD", "NVDA", "GC=F"
+  symbolName?: string   // e.g. "AMD", "NVIDIA Corp."
   onClose: () => void
 }
 
@@ -119,15 +122,29 @@ function fmtCompact(n: number | null | undefined): string {
   return `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
+// ── Derive effective symbol from props ──────────────────────────
+function deriveTypeLabel(sym: string, quoteType?: string): string {
+  if (quoteType === 'index') return 'INDEX'
+  if (quoteType === 'commodity') return 'COMMODITY'
+  if (sym.startsWith('^') || sym.endsWith('.SS') || sym.endsWith('.SZ')) return 'INDEX'
+  if (sym.includes('=F')) return 'COMMODITY'
+  return 'STOCK'
+}
+
 // ── Main Modal ──────────────────────────────────────────────────
-export default function AssetDetailModal({ quote, onClose }: AssetDetailModalProps) {
+export default function AssetDetailModal({ quote, symbol: symbolProp, symbolName, onClose }: AssetDetailModalProps) {
+  // Derive the effective symbol & display name from whichever props are provided
+  const effectiveSymbol = quote?.symbol ?? symbolProp ?? ''
+  const effectiveName = quote?.name ?? symbolName ?? effectiveSymbol
+  const effectiveLabel = quote?.label ?? symbolName ?? effectiveSymbol
+
   const [timeframe, setTimeframe] = useState<Timeframe>('1D')
   const [visible, setVisible] = useState(false)
 
-  const candleApi = useApi<CandleData>(() => getCandles(quote.symbol, timeframe), [quote.symbol, timeframe])
-  const profileApi = useApi<AssetProfile>(() => getAssetProfile(quote.symbol), [quote.symbol])
-  const sentimentApi = useApi<AssetSentiment>(() => getAssetSentiment(quote.symbol), [quote.symbol])
-  const constApi = useApi<{ symbol: string; constituents: Constituent[] }>(() => getConstituents(quote.symbol), [quote.symbol])
+  const candleApi = useApi<CandleData>(() => getCandles(effectiveSymbol, timeframe), [effectiveSymbol, timeframe])
+  const profileApi = useApi<AssetProfile>(() => getAssetProfile(effectiveSymbol), [effectiveSymbol])
+  const sentimentApi = useApi<AssetSentiment>(() => getAssetSentiment(effectiveSymbol), [effectiveSymbol])
+  const constApi = useApi<{ symbol: string; constituents: Constituent[] }>(() => getConstituents(effectiveSymbol), [effectiveSymbol])
 
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true))
@@ -145,23 +162,22 @@ export default function AssetDetailModal({ quote, onClose }: AssetDetailModalPro
     setTimeout(onClose, 200)
   }, [onClose])
 
-  const price = quote.price ?? quote.previousClose ?? 0
-  const pct = quote.changePercent ?? 0
-  const change = quote.change ?? 0
+  const price = quote?.price ?? quote?.previousClose ?? profileApi.data?.open ?? 0
+  const pct = quote?.changePercent ?? 0
+  const change = quote?.change ?? 0
   const isPos = pct > 0
   const isNeg = pct < 0
 
   const profile = profileApi.data
-  const yearLow = profile?.year_low ?? quote.yearLow ?? price * 0.75
-  const yearHigh = profile?.year_high ?? quote.yearHigh ?? price * 1.05
+  const yearLow = profile?.year_low ?? quote?.yearLow ?? (price > 0 ? price * 0.75 : 0)
+  const yearHigh = profile?.year_high ?? quote?.yearHigh ?? (price > 0 ? price * 1.05 : 0)
   const yearRange = yearHigh - yearLow
   const yearProgress = yearRange > 0 ? ((price - yearLow) / yearRange) * 100 : 50
 
-  const isIndex = quote.type === 'index'
-  const typeLabel = isIndex ? 'INDEX' : 'COMMODITY'
+  const typeLabel = deriveTypeLabel(effectiveSymbol, quote?.type)
   const description = profile?.description
     ? (profile.description.length > 120 ? profile.description.slice(0, 120) + '…' : profile.description)
-    : `${quote.name} market data & analysis.`
+    : `${effectiveName} market data & analysis.`
 
   const constituents = constApi.data?.constituents ?? []
 
@@ -196,7 +212,7 @@ export default function AssetDetailModal({ quote, onClose }: AssetDetailModalPro
                   {typeLabel}
                 </span>
                 <h1 className="text-2xl md:text-3xl font-extrabold font-headline tracking-tight text-on-surface dark:text-white">
-                  {quote.name} ({quote.label})
+                  {effectiveName} ({effectiveLabel})
                 </h1>
               </div>
               <p className="text-on-surface-variant dark:text-slate-400 font-medium text-sm md:text-base">

@@ -146,8 +146,6 @@ async def get_candles(
     timeframe: str = Query("1D", regex="^(1D|1W|1M|1Y)$"),
 ):
     """Return OHLCV candles + EMA-20 / SMA-50 for a given symbol & timeframe."""
-    if symbol not in ALL_SYMBOLS:
-        raise HTTPException(404, f"Unknown symbol: {symbol}")
 
     cache_key = f"{symbol}:{timeframe}"
     now = time.time()
@@ -217,13 +215,14 @@ _PROFILE_TTL = 600  # 10 min
 @router.get("/{symbol:path}/profile")
 async def get_profile(symbol: str):
     """Return fundamental profile data for a given symbol."""
-    if symbol not in ALL_SYMBOLS:
-        raise HTTPException(404, f"Unknown symbol: {symbol}")
-
     now = time.time()
     cached = _profile_cache.get(symbol)
     if cached and (now - cached["ts"]) < _PROFILE_TTL:
         return cached["data"]
+
+    # Derive name/type for both known and arbitrary symbols
+    meta = ALL_SYMBOLS.get(symbol)
+    display_name = meta["name"] if meta else symbol
 
     try:
         t = yf.Ticker(symbol)
@@ -257,8 +256,8 @@ async def get_profile(symbol: str):
 
         result = {
             "symbol": symbol,
-            "name": ALL_SYMBOLS[symbol]["name"],
-            "shortName": info.get("shortName", ALL_SYMBOLS[symbol]["name"]),
+            "name": display_name,
+            "shortName": info.get("shortName", display_name),
             "description": info.get("longBusinessSummary") or info.get("description", ""),
             "market_cap": info.get("marketCap") or etf_info.get("totalAssets") or etf_info.get("marketCap"),
             "pe_ratio": info.get("trailingPE") or info.get("forwardPE") or etf_info.get("trailingPE"),
@@ -292,9 +291,6 @@ async def get_asset_sentiment_api(
     days: int = Query(7, ge=1, le=90),
 ):
     """Aggregate news sentiment for a given asset over the past N days."""
-    if symbol not in ALL_SYMBOLS:
-        raise HTTPException(404, f"Unknown symbol: {symbol}")
-
     try:
         from app.models.database import get_db, get_asset_sentiment
         db = await get_db()
@@ -304,8 +300,20 @@ async def get_asset_sentiment_api(
         finally:
             await db.close()
     except Exception as e:
-        logger.error(f"Sentiment aggregation failed for {symbol}: {e}")
-        raise HTTPException(500, f"Failed to aggregate sentiment: {e}")
+        logger.warning(f"Sentiment aggregation failed for {symbol}: {e}")
+        # Return empty/null sentiment for unknown or unsupported symbols
+        return {
+            "symbol": symbol,
+            "days": days,
+            "score": None,
+            "total": 0,
+            "bullish": 0,
+            "bearish": 0,
+            "neutral": 0,
+            "signal": None,
+            "description": None,
+            "tags": [],
+        }
 
 
 # ── Top Constituents (index weight contributors) ────────────────
@@ -341,9 +349,6 @@ _CONST_TTL = 300  # 5 min
 @router.get("/{symbol:path}/constituents")
 async def get_constituents(symbol: str):
     """Return top weight contributors with live change % for an index."""
-    if symbol not in ALL_SYMBOLS:
-        raise HTTPException(404, f"Unknown symbol: {symbol}")
-
     mapping = _CONSTITUENTS.get(symbol)
     if not mapping:
         return {"symbol": symbol, "constituents": []}

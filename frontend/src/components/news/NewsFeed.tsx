@@ -1,10 +1,11 @@
 import { useCallback, useState } from 'react'
-import { getNews, getAnalysisStats, triggerAnalysis, fetchNews } from '../../services/api'
+import { getNews, getAnalysisStats, triggerAnalysis, fetchNews, type MarketQuote } from '../../services/api'
 import { useApi } from '../../hooks/useApi'
 import { usePolling } from '../../hooks/usePolling'
 import NewsCard from './NewsCard'
 import MarketSidebar from '../layout/MarketSidebar'
 import LoadingSpinner from '../common/LoadingSpinner'
+import AssetDetailModal from '../markets/AssetDetailModal'
 
 type Filter = 'all' | 'bullish' | 'bearish'
 
@@ -16,6 +17,8 @@ const FILTER_LABELS: Record<Filter, string> = {
 
 export default function NewsFeed() {
   const [filter, setFilter] = useState<Filter>('all')
+  const [selectedQuote, setSelectedQuote] = useState<MarketQuote | null>(null)
+  const [selectedTicker, setSelectedTicker] = useState<{ symbol: string; name?: string } | null>(null)
 
   const newsApi = useApi(() => getNews({ page_size: 25 }), [])
   const statsApi = useApi(getAnalysisStats, [])
@@ -117,7 +120,11 @@ export default function NewsFeed() {
             </div>
           ) : (
             filtered.map((item) => (
-              <NewsCard key={item.id} item={item} />
+              <NewsCard
+                key={item.id}
+                item={item}
+                onTickerClick={(ticker, name) => setSelectedTicker({ symbol: ticker, name })}
+              />
             ))
           )}
         </section>
@@ -136,7 +143,15 @@ export default function NewsFeed() {
       </div>
 
       {/* Right sidebar */}
-      <MarketSidebar stats={statsApi.data} />
+      <MarketSidebar stats={statsApi.data} onQuoteClick={(q) => setSelectedQuote(q)} />
+
+      {/* Asset Detail Modals */}
+      {selectedQuote && (
+        <AssetDetailModal quote={selectedQuote} onClose={() => setSelectedQuote(null)} />
+      )}
+      {selectedTicker && (
+        <AssetDetailModal symbol={selectedTicker.symbol} symbolName={selectedTicker.name} onClose={() => setSelectedTicker(null)} />
+      )}
     </div>
   )
 }

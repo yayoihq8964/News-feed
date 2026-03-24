@@ -1,12 +1,13 @@
 import { useApi } from '../../hooks/useApi'
-import { getMarketQuotes } from '../../services/api'
+import { getMarketQuotes, type MarketQuote } from '../../services/api'
 import type { AnalysisStats } from '../../types'
 
 interface MarketSidebarProps {
   stats?: AnalysisStats | null
+  onQuoteClick?: (quote: MarketQuote) => void
 }
 
-export default function MarketSidebar({ stats }: MarketSidebarProps) {
+export default function MarketSidebar({ stats, onQuoteClick }: MarketSidebarProps) {
   const quotesApi = useApi(getMarketQuotes, [])
   const quotes = quotesApi.data?.quotes ?? []
 
@@ -49,7 +50,7 @@ export default function MarketSidebar({ stats }: MarketSidebarProps) {
               if (price === 0) return null
 
               return (
-                <div key={quote.symbol} className="bg-surface-container-lowest dark:bg-slate-800 p-4 rounded-xl space-y-3">
+                <div key={quote.symbol} className="bg-surface-container-lowest dark:bg-slate-800 p-4 rounded-xl space-y-3 cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all active:scale-[0.98]" onClick={() => onQuoteClick?.(quote)}>
                   <div className="flex justify-between items-center">
                     <div>
                       <span className="font-bold text-sm dark:text-slate-100">{quote.label || quote.name}</span>
@@ -131,7 +132,7 @@ export default function MarketSidebar({ stats }: MarketSidebarProps) {
                 const isNeg = pct < 0
                 if (price === 0) return null
                 return (
-                  <div key={q.symbol} className="flex items-center gap-4 p-4 rounded-xl bg-surface-container-lowest dark:bg-slate-800">
+                  <div key={q.symbol} className="flex items-center gap-4 p-4 rounded-xl bg-surface-container-lowest dark:bg-slate-800 cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all active:scale-[0.98]" onClick={() => onQuoteClick?.(q)}>
                     <div className="w-10 h-10 rounded-xl bg-surface-container dark:bg-slate-700 flex items-center justify-center">
                       <span className="material-symbols-outlined text-amber-500">
                         {q.name.includes('Gold') ? 'diamond' : q.name.includes('Oil') ? 'oil_barrel' : 'toll'}
