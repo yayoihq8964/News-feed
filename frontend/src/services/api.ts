@@ -159,6 +159,7 @@ export interface AssetProfile {
   pe_ratio: number | null
   dividend_yield: number | null
   avg_volume: number | null
+  last_volume: number | null
   open: number | null
   day_high: number | null
   day_low: number | null

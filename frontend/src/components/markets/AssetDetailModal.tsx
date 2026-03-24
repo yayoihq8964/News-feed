@@ -316,17 +316,17 @@ export default function AssetDetailModal({ quote, onClose }: AssetDetailModalPro
             </div>
           </div>
 
-          {/* ── Bottom: Financial Metrics + Constituents + Actions ── */}
+          {/* ── Bottom: Financial Metrics + Constituents ── */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left 2/3: OHLV cards + Market Statistics */}
             <div className="lg:col-span-2 space-y-6">
               {/* OHLV Quick Cards */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                  { label: 'OPEN', value: fmtPrice(profile?.open) },
-                  { label: 'HIGH', value: fmtPrice(profile?.day_high) },
-                  { label: 'LOW', value: fmtPrice(profile?.day_low) },
-                  { label: 'VOLUME', value: fmtVolume(profile?.avg_volume) },
+                  { label: '开盘', value: fmtPrice(profile?.open) },
+                  { label: '最高', value: fmtPrice(profile?.day_high) },
+                  { label: '最低', value: fmtPrice(profile?.day_low) },
+                  { label: '成交量', value: fmtVolume(profile?.last_volume ?? profile?.avg_volume) },
                 ].map((item) => (
                   <div key={item.label} className="bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-sm border border-surface-container-low dark:border-slate-700/30 hover:-translate-y-0.5 hover:shadow-md transition-all">
                     <p className="text-[11px] font-bold text-on-surface-variant/70 dark:text-slate-400 uppercase tracking-widest mb-1">{item.label}</p>
@@ -339,28 +339,28 @@ export default function AssetDetailModal({ quote, onClose }: AssetDetailModalPro
 
               {/* Market Statistics Table */}
               <div className="bg-surface-container-low dark:bg-slate-800/60 rounded-3xl p-6 md:p-8">
-                <h3 className="font-headline font-bold text-lg mb-6 dark:text-white">Market Statistics</h3>
+                <h3 className="font-headline font-bold text-lg mb-6 dark:text-white">市场统计</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-5">
                   <div className="flex justify-between items-center py-2 border-b border-surface-variant/30 dark:border-slate-700/40">
-                    <span className="text-sm text-on-surface-variant dark:text-slate-400 font-medium">Market Cap</span>
+                    <span className="text-sm text-on-surface-variant dark:text-slate-400 font-medium">总市值</span>
                     <span className="text-sm font-bold text-on-surface dark:text-white">
                       {profile ? fmtLargeNum(profile.market_cap) : <Skeleton />}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-surface-variant/30 dark:border-slate-700/40">
-                    <span className="text-sm text-on-surface-variant dark:text-slate-400 font-medium">P/E Ratio</span>
+                    <span className="text-sm text-on-surface-variant dark:text-slate-400 font-medium">市盈率</span>
                     <span className="text-sm font-bold text-on-surface dark:text-white">
                       {profile ? (profile.pe_ratio != null ? profile.pe_ratio.toFixed(2) : '—') : <Skeleton />}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-surface-variant/30 dark:border-slate-700/40">
-                    <span className="text-sm text-on-surface-variant dark:text-slate-400 font-medium">Dividend Yield</span>
+                    <span className="text-sm text-on-surface-variant dark:text-slate-400 font-medium">股息率</span>
                     <span className="text-sm font-bold text-on-surface dark:text-white">
                       {profile ? (profile.dividend_yield != null ? `${(profile.dividend_yield * 100).toFixed(2)}%` : '—') : <Skeleton />}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-surface-variant/30 dark:border-slate-700/40">
-                    <span className="text-sm text-on-surface-variant dark:text-slate-400 font-medium">Avg. Volume</span>
+                    <span className="text-sm text-on-surface-variant dark:text-slate-400 font-medium">平均成交量</span>
                     <span className="text-sm font-bold text-on-surface dark:text-white">
                       {profile ? fmtVolume(profile.avg_volume) : <Skeleton />}
                     </span>
@@ -368,7 +368,7 @@ export default function AssetDetailModal({ quote, onClose }: AssetDetailModalPro
                   {/* 52-Week Range — full width */}
                   <div className="md:col-span-2">
                     <div className="flex justify-between items-center mb-3">
-                      <span className="text-sm text-on-surface-variant dark:text-slate-400 font-medium">52-Week Range</span>
+                      <span className="text-sm text-on-surface-variant dark:text-slate-400 font-medium">52周区间</span>
                       <div className="flex gap-4">
                         <span className="text-xs font-bold dark:text-white">{fmtCompact(yearLow)}</span>
                         <span className="text-xs font-bold dark:text-white">{fmtCompact(yearHigh)}</span>
@@ -385,12 +385,11 @@ export default function AssetDetailModal({ quote, onClose }: AssetDetailModalPro
               </div>
             </div>
 
-            {/* Right 1/3: Constituents + Actions */}
-            <div className="space-y-6">
-              {/* Top Weight Contributors */}
-              {constituents.length > 0 && (
+            {/* Right 1/3: Constituents */}
+            {constituents.length > 0 && (
+              <div className="space-y-6">
                 <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-surface-container-low dark:border-slate-700/30">
-                  <h4 className="text-on-surface dark:text-white font-bold text-sm mb-6">Top Weight Contributors</h4>
+                  <h4 className="text-on-surface dark:text-white font-bold text-sm mb-6">权重股一览</h4>
                   <div className="space-y-5">
                     {constituents.map((c) => {
                       const cPos = c.changePercent != null && c.changePercent > 0
@@ -404,7 +403,7 @@ export default function AssetDetailModal({ quote, onClose }: AssetDetailModalPro
                             <div>
                               <p className="text-sm font-bold text-on-surface dark:text-white">{c.name}</p>
                               <p className="text-[10px] font-semibold text-on-surface-variant dark:text-slate-400">
-                                {c.ticker} • {c.weight}% weight
+                                {c.ticker} • {c.weight}% 权重
                               </p>
                             </div>
                           </div>
@@ -418,20 +417,8 @@ export default function AssetDetailModal({ quote, onClose }: AssetDetailModalPro
                     })}
                   </div>
                 </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex flex-col gap-3">
-                <button className="w-full py-4 bg-primary text-white font-headline font-bold rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform active:scale-95 flex items-center justify-center gap-2">
-                  <span className="material-symbols-outlined">swap_vert</span>
-                  Trade Now
-                </button>
-                <button className="w-full py-4 bg-surface-container-highest dark:bg-slate-700 text-on-surface dark:text-slate-200 font-headline font-bold rounded-2xl hover:bg-surface-variant dark:hover:bg-slate-600 transition-colors active:scale-95 flex items-center justify-center gap-2">
-                  <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                  Add to Watchlist
-                </button>
               </div>
-            </div>
+            )}
           </div>
 
         </div>

@@ -218,6 +218,23 @@ async def get_profile(symbol: str):
         t = yf.Ticker(symbol)
         info = t.info or {}
 
+        # fast_info is more reliable for OHLV on indices
+        try:
+            fi = t.fast_info
+            fi_open = fi.open
+            fi_high = fi.day_high
+            fi_low = fi.day_low
+            fi_vol = fi.last_volume
+            fi_year_low = fi.year_low
+            fi_year_high = fi.year_high
+            fi_50d = fi.fifty_day_average if hasattr(fi, "fifty_day_average") else None
+            fi_200d = fi.two_hundred_day_average if hasattr(fi, "two_hundred_day_average") else None
+        except Exception:
+            fi_open = fi_high = fi_low = fi_vol = fi_year_low = fi_year_high = fi_50d = fi_200d = None
+
+        def _r(v):
+            return round(float(v), 2) if v is not None else None
+
         result = {
             "symbol": symbol,
             "name": ALL_SYMBOLS[symbol]["name"],
@@ -227,13 +244,14 @@ async def get_profile(symbol: str):
             "pe_ratio": info.get("trailingPE") or info.get("forwardPE"),
             "dividend_yield": info.get("dividendYield"),
             "avg_volume": info.get("averageVolume") or info.get("averageDailyVolume10Day"),
-            "open": info.get("open") or info.get("regularMarketOpen"),
-            "day_high": info.get("dayHigh") or info.get("regularMarketDayHigh"),
-            "day_low": info.get("dayLow") or info.get("regularMarketDayLow"),
-            "year_low": info.get("fiftyTwoWeekLow"),
-            "year_high": info.get("fiftyTwoWeekHigh"),
-            "fifty_day_avg": info.get("fiftyDayAverage"),
-            "two_hundred_day_avg": info.get("twoHundredDayAverage"),
+            "open": _r(info.get("open") or info.get("regularMarketOpen") or fi_open),
+            "day_high": _r(info.get("dayHigh") or info.get("regularMarketDayHigh") or fi_high),
+            "day_low": _r(info.get("dayLow") or info.get("regularMarketDayLow") or fi_low),
+            "last_volume": int(fi_vol) if fi_vol else (info.get("volume") or info.get("regularMarketVolume")),
+            "year_low": _r(info.get("fiftyTwoWeekLow") or fi_year_low),
+            "year_high": _r(info.get("fiftyTwoWeekHigh") or fi_year_high),
+            "fifty_day_avg": _r(info.get("fiftyDayAverage") or fi_50d),
+            "two_hundred_day_avg": _r(info.get("twoHundredDayAverage") or fi_200d),
             "beta": info.get("beta"),
         }
 
