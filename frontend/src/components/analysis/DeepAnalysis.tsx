@@ -6,12 +6,14 @@ import LoadingSpinner from '../common/LoadingSpinner'
 import SentimentChip from '../common/SentimentChip'
 import NewsImage from '../news/NewsImage'
 import { useState } from 'react'
+import AssetDetailModal from '../markets/AssetDetailModal'
 import { parseUtcDate } from '../../utils/time'
 import { getRealImageUrl } from '../../utils/image'
 
 export default function DeepAnalysis() {
   const { id } = useParams<{ id: string }>()
   const [triggerMsg, setTriggerMsg] = useState<string | null>(null)
+  const [selectedTicker, setSelectedTicker] = useState<{ symbol: string; name?: string } | null>(null)
 
   const selectedNewsId = id ? parseInt(id) : null
 
@@ -268,7 +270,8 @@ export default function DeepAnalysis() {
                 return (
                   <div
                     key={stock.ticker}
-                    className="bg-surface-container-lowest dark:bg-slate-900 rounded-xl p-4 space-y-2"
+                    className="bg-surface-container-lowest dark:bg-slate-900 rounded-xl p-4 space-y-2 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all active:scale-[0.98]"
+                    onClick={() => setSelectedTicker({ symbol: stock.ticker, name: stock.ticker })}
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-mono font-bold dark:text-white">{stock.ticker}</span>
@@ -445,6 +448,15 @@ export default function DeepAnalysis() {
           </div>
         </div>
       </aside>
+
+      {/* Asset Detail Modal */}
+      {selectedTicker && (
+        <AssetDetailModal
+          symbol={selectedTicker.symbol}
+          symbolName={selectedTicker.name}
+          onClose={() => setSelectedTicker(null)}
+        />
+      )}
     </div>
   )
 }
