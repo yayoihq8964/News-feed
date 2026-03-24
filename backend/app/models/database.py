@@ -502,3 +502,148 @@ async def get_all_settings(db: aiosqlite.Connection) -> dict[str, Any]:
         except (json.JSONDecodeError, TypeError):
             result[row[0]] = row[1]
     return result
+
+
+# --- Asset Sentiment Aggregation ---
+
+# Map index symbols → representative tickers & sectors
+_INDEX_MAPPING: dict[str, dict] = {
+    "^IXIC":    {"sectors": ["Technology", "Tech", "Semiconductor", "Software", "Internet"],
+                 "tickers": ["AAPL", "MSFT", "GOOG", "GOOGL", "AMZN", "META", "NVDA", "TSLA", "NFLX", "AMD", "INTC", "QCOM"]},
+    "^GSPC":    {"sectors": ["Technology", "Finance", "Healthcare", "Energy", "Consumer"],
+                 "tickers": ["AAPL", "MSFT", "GOOG", "AMZN", "NVDA", "META", "JPM", "V", "UNH", "JNJ", "XOM"]},
+    "^N225":    {"sectors": ["Technology", "Automotive", "Manufacturing", "Finance"],
+                 "tickers": ["TM", "SONY", "HMC", "NTDOY", "MUFG"]},
+    "000001.SS": {"sectors": ["Finance", "Technology", "Energy", "Consumer"],
+                  "tickers": ["BABA", "JD", "PDD", "BIDU", "NIO"]},
+}
+
+_COMMODITY_MAPPING: dict[str, dict] = {
+    "GC=F": {"commodities": ["Gold", "gold", "黄金"], "sectors": ["Mining", "Precious Metals"]},
+    "SI=F": {"commodities": ["Silver", "silver", "白银"], "sectors": ["Mining", "Precious Metals"]},
+    "CL=F": {"commodities": ["Oil", "oil", "Crude", "crude", "原油", "石油"], "sectors": ["Energy", "Oil"]},
+}
+
+
+async def get_asset_sentiment(db: aiosqlite.Connection, symbol: str, days: int = 7) -> dict:
+    """Aggregate sentiment for a given asset from recent analyses."""
+    from datetime import datetime, timedelta, timezone
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%S")
+
+    async with db.execute(
+        """SELECT a.affected_stocks, a.affected_sectors, a.affected_commodities,
+                  a.overall_sentiment, a.classification, a.confidence, a.analyzed_at
+           FROM analyses a
+           WHERE a.analyzed_at >= ?
+           ORDER BY a.analyzed_at DESC""",
+        (cutoff,),
+    ) as cur:
+        rows = await cur.fetchall()
+
+    if not rows:
+        return {"score": None, "total": 0, "bullish": 0, "bearish": 0, "neutral": 0,
+                "signal": None, "description": None, "tags": []}
+
+    idx_map = _INDEX_MAPPING.get(symbol, {})
+    com_map = _COMMODITY_MAPPING.get(symbol, {})
+    target_tickers = set(idx_map.get("tickers", []))
+    target_sectors = set(idx_map.get("sectors", []))
+    target_commodities = set(com_map.get("commodities", []))
+    target_com_sectors = set(com_map.get("sectors", []))
+
+    weighted_sum = 0.0
+    weight_total = 0.0
+    bullish = bearish = neutral = 0
+
+    for r in rows:
+        stocks = json.loads(r[0]) if r[0] else []
+        sectors = json.loads(r[1]) if r[1] else []
+        commodities = json.loads(r[2]) if r[2] else []
+        sentiment = r[3] or 0
+        cls = r[4] or "neutral"
+        confidence = r[5] or 50
+
+        relevance = 0.0
+
+        # Check ticker overlap
+        row_tickers = {s.get("ticker", "") for s in stocks if isinstance(s, dict)}
+        ticker_hits = row_tickers & target_tickers
+        if ticker_hits:
+            relevance += len(ticker_hits) * 2.0
+
+        # Check sector overlap
+        sector_set = set(sectors) if isinstance(sectors, list) else set()
+        sector_hits = sector_set & (target_sectors | target_com_sectors)
+        if sector_hits:
+            relevance += len(sector_hits) * 1.0
+
+        # Check commodity name overlap
+        if target_commodities:
+            com_names = set()
+            for c in commodities:
+                if isinstance(c, dict):
+                    com_names.add(c.get("name", ""))
+                elif isinstance(c, str):
+                    com_names.add(c)
+            if com_names & target_commodities:
+                relevance += 3.0
+
+        if relevance <= 0:
+            continue
+
+        w = relevance * (confidence / 100.0)
+        weighted_sum += sentiment * w
+        weight_total += w
+
+        if cls == "bullish":
+            bullish += 1
+        elif cls == "bearish":
+            bearish += 1
+        else:
+            neutral += 1
+
+    total = bullish + bearish + neutral
+    if total == 0 or weight_total == 0:
+        return {"score": None, "total": 0, "bullish": 0, "bearish": 0, "neutral": 0,
+                "signal": None, "description": None, "tags": []}
+
+    avg_sentiment = weighted_sum / weight_total  # -100 to 100
+    # Normalise to 0–100 scale
+    score = max(0, min(100, round((avg_sentiment + 100) / 2)))
+
+    if score >= 65:
+        signal = "Bullish Divergence"
+        tags = ["Momentum Long", "Low Risk"] if score >= 75 else ["Accumulation", "Medium Risk"]
+    elif score <= 35:
+        signal = "Bearish Divergence"
+        tags = ["Risk Off", "High Risk"] if score <= 25 else ["Distribution", "Medium Risk"]
+    else:
+        signal = "Neutral Range"
+        tags = ["Consolidation", "Neutral"]
+
+    bull_ratio = bullish / total
+    desc_parts = []
+    if bull_ratio > 0.6:
+        desc_parts.append(f"过去 {days} 天内 {total} 条相关新闻中，{round(bull_ratio * 100)}% 偏多。")
+    elif bull_ratio < 0.4:
+        desc_parts.append(f"过去 {days} 天内 {total} 条相关新闻中，{round((1 - bull_ratio) * 100)}% 偏空。")
+    else:
+        desc_parts.append(f"过去 {days} 天内 {total} 条相关新闻，多空分歧较大。")
+
+    if avg_sentiment > 30:
+        desc_parts.append("整体情绪积极，资金面或有积累信号。")
+    elif avg_sentiment < -30:
+        desc_parts.append("整体情绪偏负面，注意风险控制。")
+    else:
+        desc_parts.append("市场情绪震荡，建议观望。")
+
+    return {
+        "score": score,
+        "total": total,
+        "bullish": bullish,
+        "bearish": bearish,
+        "neutral": neutral,
+        "signal": signal,
+        "description": " ".join(desc_parts),
+        "tags": tags,
+    }

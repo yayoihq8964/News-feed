@@ -4,9 +4,10 @@ import { getMarketQuotes, getCalendar, getAnalysisStats, getNews, getXSentiment,
 import type { AnalysisStats, CalendarEvent, XSentiment, NewsItem } from '../../types'
 import FearGreedGauge from '../sentiment/FearGreedGauge'
 import LoadingSpinner from '../common/LoadingSpinner'
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { toLocalTime } from '../../utils/time'
+import AssetDetailModal from './AssetDetailModal'
 
 export default function Markets() {
   const quotesApi = useApi<{ quotes: MarketQuote[] }>(() => getMarketQuotes(), [])
@@ -14,6 +15,8 @@ export default function Markets() {
   const statsApi = useApi<AnalysisStats>(() => getAnalysisStats(), [])
   const newsApi = useApi<{ items: NewsItem[]; total: number }>(() => getNews({ page_size: 5 }), [])
   const xApi = useApi<XSentiment | null>(() => getXSentiment(), [])
+
+  const [selectedQuote, setSelectedQuote] = useState<MarketQuote | null>(null)
 
   const refetch = useCallback(() => {
     quotesApi.refetch()
@@ -56,7 +59,7 @@ export default function Markets() {
               const isNeg = pct < 0
               if (price === 0) return null
               return (
-                <div key={q.symbol} className="bg-surface-container-lowest dark:bg-slate-800 rounded-2xl p-5 space-y-3">
+                <div key={q.symbol} className="bg-surface-container-lowest dark:bg-slate-800 rounded-2xl p-5 space-y-3 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all active:scale-[0.98]" onClick={() => setSelectedQuote(q)}>
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-wider">{q.label}</span>
                     <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
@@ -186,7 +189,7 @@ export default function Markets() {
                 const isNeg = pct < 0
                 if (price === 0) return null
                 return (
-                  <div key={q.symbol} className="bg-surface-container-lowest dark:bg-slate-800 rounded-2xl p-5 space-y-2">
+                  <div key={q.symbol} className="bg-surface-container-lowest dark:bg-slate-800 rounded-2xl p-5 space-y-2 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all active:scale-[0.98]" onClick={() => setSelectedQuote(q)}>
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-surface-container dark:bg-slate-700 flex items-center justify-center">
                         <span className="material-symbols-outlined text-amber-500">
@@ -315,6 +318,14 @@ export default function Markets() {
           )}
         </div>
       </aside>
+
+      {/* Asset Detail Modal */}
+      {selectedQuote && (
+        <AssetDetailModal
+          quote={selectedQuote}
+          onClose={() => setSelectedQuote(null)}
+        />
+      )}
     </div>
   )
 }

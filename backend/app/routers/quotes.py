@@ -2,8 +2,9 @@ import logging
 import time
 from typing import Optional
 
+import numpy as np
 import yfinance as yf
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, Query
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/quotes", tags=["quotes"])
@@ -112,3 +113,157 @@ async def get_market_quotes():
                 for s in ALL_SYMBOLS
             ]
         }
+
+
+# ── Candles (OHLCV + EMA/SMA) ──────────────────────────────────
+
+# Map frontend timeframe → yfinance (period, interval)
+_TF_MAP = {
+    "1D": ("5d", "15m"),
+    "1W": ("1mo", "1h"),
+    "1M": ("6mo", "1d"),
+    "1Y": ("1y", "1d"),
+}
+
+_candle_cache: dict = {}
+_CANDLE_TTL = 300  # 5 min
+
+
+@router.get("/{symbol:path}/candles")
+async def get_candles(
+    symbol: str,
+    timeframe: str = Query("1D", regex="^(1D|1W|1M|1Y)$"),
+):
+    """Return OHLCV candles + EMA-20 / SMA-50 for a given symbol & timeframe."""
+    if symbol not in ALL_SYMBOLS:
+        raise HTTPException(404, f"Unknown symbol: {symbol}")
+
+    cache_key = f"{symbol}:{timeframe}"
+    now = time.time()
+    cached = _candle_cache.get(cache_key)
+    if cached and (now - cached["ts"]) < _CANDLE_TTL:
+        return cached["data"]
+
+    period, interval = _TF_MAP[timeframe]
+
+    try:
+        t = yf.Ticker(symbol)
+        df = t.history(period=period, interval=interval)
+
+        if df.empty:
+            raise HTTPException(404, "No candle data available")
+
+        # Drop timezone info for JSON serialisation
+        df.index = df.index.tz_localize(None) if df.index.tz is None else df.index.tz_convert(None)
+
+        # Compute moving averages on Close
+        close = df["Close"]
+        ema20 = close.ewm(span=20, adjust=False).mean()
+        sma50 = close.rolling(window=min(50, len(close))).mean()
+
+        candles = []
+        ema_points = []
+        sma_points = []
+
+        for idx, row in df.iterrows():
+            ts = idx.isoformat()
+            candles.append({
+                "time": ts,
+                "open": round(float(row["Open"]), 2),
+                "high": round(float(row["High"]), 2),
+                "low": round(float(row["Low"]), 2),
+                "close": round(float(row["Close"]), 2),
+                "volume": int(row["Volume"]),
+            })
+            if not np.isnan(ema20[idx]):
+                ema_points.append({"time": ts, "value": round(float(ema20[idx]), 2)})
+            if not np.isnan(sma50[idx]):
+                sma_points.append({"time": ts, "value": round(float(sma50[idx]), 2)})
+
+        result = {
+            "symbol": symbol,
+            "timeframe": timeframe,
+            "candles": candles,
+            "ema20": ema_points,
+            "sma50": sma_points,
+        }
+        _candle_cache[cache_key] = {"data": result, "ts": now}
+        return result
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Candle fetch failed for {symbol}: {e}")
+        raise HTTPException(500, f"Failed to fetch candle data: {e}")
+
+
+# ── Profile (fundamentals) ──────────────────────────────────────
+
+_profile_cache: dict = {}
+_PROFILE_TTL = 600  # 10 min
+
+
+@router.get("/{symbol:path}/profile")
+async def get_profile(symbol: str):
+    """Return fundamental profile data for a given symbol."""
+    if symbol not in ALL_SYMBOLS:
+        raise HTTPException(404, f"Unknown symbol: {symbol}")
+
+    now = time.time()
+    cached = _profile_cache.get(symbol)
+    if cached and (now - cached["ts"]) < _PROFILE_TTL:
+        return cached["data"]
+
+    try:
+        t = yf.Ticker(symbol)
+        info = t.info or {}
+
+        result = {
+            "symbol": symbol,
+            "name": ALL_SYMBOLS[symbol]["name"],
+            "shortName": info.get("shortName", ALL_SYMBOLS[symbol]["name"]),
+            "description": info.get("longBusinessSummary") or info.get("description", ""),
+            "market_cap": info.get("marketCap"),
+            "pe_ratio": info.get("trailingPE") or info.get("forwardPE"),
+            "dividend_yield": info.get("dividendYield"),
+            "avg_volume": info.get("averageVolume") or info.get("averageDailyVolume10Day"),
+            "open": info.get("open") or info.get("regularMarketOpen"),
+            "day_high": info.get("dayHigh") or info.get("regularMarketDayHigh"),
+            "day_low": info.get("dayLow") or info.get("regularMarketDayLow"),
+            "year_low": info.get("fiftyTwoWeekLow"),
+            "year_high": info.get("fiftyTwoWeekHigh"),
+            "fifty_day_avg": info.get("fiftyDayAverage"),
+            "two_hundred_day_avg": info.get("twoHundredDayAverage"),
+            "beta": info.get("beta"),
+        }
+
+        _profile_cache[symbol] = {"data": result, "ts": now}
+        return result
+
+    except Exception as e:
+        logger.error(f"Profile fetch failed for {symbol}: {e}")
+        raise HTTPException(500, f"Failed to fetch profile: {e}")
+
+
+# ── Asset Sentiment (aggregated from analyses) ──────────────────
+
+@router.get("/{symbol:path}/sentiment")
+async def get_asset_sentiment_api(
+    symbol: str,
+    days: int = Query(7, ge=1, le=90),
+):
+    """Aggregate news sentiment for a given asset over the past N days."""
+    if symbol not in ALL_SYMBOLS:
+        raise HTTPException(404, f"Unknown symbol: {symbol}")
+
+    try:
+        from app.models.database import get_db, get_asset_sentiment
+        db = await get_db()
+        try:
+            result = await get_asset_sentiment(db, symbol, days=days)
+            return {"symbol": symbol, "days": days, **result}
+        finally:
+            await db.close()
+    except Exception as e:
+        logger.error(f"Sentiment aggregation failed for {symbol}: {e}")
+        raise HTTPException(500, f"Failed to aggregate sentiment: {e}")

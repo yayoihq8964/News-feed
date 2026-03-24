@@ -123,6 +123,72 @@ export interface MarketQuote {
 export const getMarketQuotes = () =>
   request<{ quotes: MarketQuote[] }>('/api/quotes')
 
+// Candles (OHLCV + EMA/SMA)
+export interface Candle {
+  time: string
+  open: number
+  high: number
+  low: number
+  close: number
+  volume: number
+}
+
+export interface MAPoint {
+  time: string
+  value: number
+}
+
+export interface CandleData {
+  symbol: string
+  timeframe: string
+  candles: Candle[]
+  ema20: MAPoint[]
+  sma50: MAPoint[]
+}
+
+export const getCandles = (symbol: string, timeframe = '1D') =>
+  request<CandleData>(`/api/quotes/${encodeURIComponent(symbol)}/candles?timeframe=${timeframe}`)
+
+// Profile (fundamentals)
+export interface AssetProfile {
+  symbol: string
+  name: string
+  shortName: string
+  description: string
+  market_cap: number | null
+  pe_ratio: number | null
+  dividend_yield: number | null
+  avg_volume: number | null
+  open: number | null
+  day_high: number | null
+  day_low: number | null
+  year_low: number | null
+  year_high: number | null
+  fifty_day_avg: number | null
+  two_hundred_day_avg: number | null
+  beta: number | null
+}
+
+export const getAssetProfile = (symbol: string) =>
+  request<AssetProfile>(`/api/quotes/${encodeURIComponent(symbol)}/profile`)
+
+// Asset Sentiment (aggregated)
+export interface AssetSentiment {
+  symbol: string
+  days: number
+  score: number | null
+  total: number
+  bullish: number
+  bearish: number
+  neutral: number
+  signal: string | null
+  description: string | null
+  tags: string[]
+}
+
+export const getAssetSentiment = (symbol: string, days = 7) =>
+  request<AssetSentiment>(`/api/quotes/${encodeURIComponent(symbol)}/sentiment?days=${days}`)
+
 // Calendar
 export const getCalendar = () =>
   request<{ events: CalendarEvent[]; count: number }>('/api/calendar');
