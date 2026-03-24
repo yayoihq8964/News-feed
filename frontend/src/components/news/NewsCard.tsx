@@ -15,6 +15,7 @@ export default function NewsCard({ item }: NewsCardProps) {
   const rawImageUrl = item.image_url || (item as any).urlToImage
   const imageUrl = getRealImageUrl(rawImageUrl)
   const hasAnalysis = item.analysis_status === 'completed' && analysis
+  const isPinned = item.is_pinned
 
   const titleContent = (
     <h2 className="text-lg font-bold font-headline leading-snug text-on-surface dark:text-slate-100 group-hover:text-primary dark:group-hover:text-violet-400 transition-colors duration-200">
@@ -23,11 +24,15 @@ export default function NewsCard({ item }: NewsCardProps) {
   )
 
   return (
-    <article className="group bg-white dark:bg-slate-800 rounded-xl p-5 transition-all duration-200 hover:shadow-md dark:hover:shadow-slate-900/40 border border-slate-100 dark:border-slate-700/60">
+    <article className={`group rounded-xl p-5 transition-all duration-200 ${
+      isPinned
+        ? 'bg-violet-50/50 dark:bg-violet-950/20 border-l-4 border-primary dark:border-violet-500 shadow-xl shadow-primary/10 dark:shadow-violet-900/20 hover:shadow-2xl hover:shadow-primary/10'
+        : 'bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-lg hover:shadow-slate-200/50 dark:hover:shadow-slate-900/40'
+    }`}>
       <div className="flex gap-4">
         {/* Text content - left */}
         <div className="flex-1 flex flex-col gap-2.5 min-w-0">
-          {/* Source + Time */}
+          {/* Source + Time + Pinned badge */}
           <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest flex-wrap">
             <span className="text-primary dark:text-violet-400">{item.source}</span>
             <span className="w-1 h-1 bg-slate-300 dark:bg-slate-600 rounded-full" />
@@ -37,6 +42,12 @@ export default function NewsCard({ item }: NewsCardProps) {
                 <span className="w-1 h-1 bg-slate-300 dark:bg-slate-600 rounded-full" />
                 <span className="text-emerald-500 dark:text-emerald-400">AI已分析</span>
               </>
+            )}
+            {isPinned && (
+              <div className="flex items-center gap-1 px-2 py-0.5 bg-primary/10 dark:bg-violet-500/20 text-primary dark:text-violet-400 rounded-md text-[10px] font-black tracking-wider ml-auto">
+                <span className="material-symbols-outlined text-[13px]" style={{ fontVariationSettings: "'FILL' 1" }}>push_pin</span>
+                置顶
+              </div>
             )}
           </div>
 
